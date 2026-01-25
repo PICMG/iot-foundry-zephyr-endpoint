@@ -1,0 +1,22 @@
+# editors
+.vscode
+*.swp
+*~
+
+# python
+.venv
+
+# build
+/build*
+
+__pycache__/
+
+# docs
+/doc/_build*
+
+# zephyr modules and core
+/modules*
+/zephyr*
+
+
+

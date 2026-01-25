@@ -1,0 +1,41 @@
+
+&zephyr_udc0 {
+    cdc_acm_uart0: cdc_acm_uart0 {
+        compatible = "zephyr,cdc-acm-uart";
+    };
+};
+
+/* Make the USB CDC-ACM virtual UART the console */
+/ {
+    chosen {
+        zephyr,console = &cdc_acm_uart0;
+        zephyr,shell-uart = &cdc_acm_uart0;
+    };
+};
+
+/* Provide a node label `arduino_serial` that points to the hardware UART
+ * (sercom5) so MCTP can use the board's serial header.
+ */
+arduino_serial: &sercom5 {
+    status = "okay";
+    /* Configure DMA channels for async operation (rx, tx). */
+    /* Use SAMD21 trigger IDs for SERCOM5: 11 = SERCOM5 RX, 12 = SERCOM5 TX */
+    dmas = <&dmac 0 11>, <&dmac 1 12>;
+    dma-names = "rx", "tx";
+};
+
+/* Provide DMA channels for SERCOM3 so the SAM0 UART driver can enable
+ * async/DMA support for that instance as well. Values follow common
+ * SAMD21 examples (channels 10/11 with trigsrc 7/8 for SERCOM3).
+ */
+&sercom3 {
+    status = "disabled";
+    /* SERCOM3 trigger IDs: 7 = SERCOM3 RX, 8 = SERCOM3 TX */
+    dmas = <&dmac 10 7>, <&dmac 11 8>;
+    dma-names = "rx", "tx";
+};
+
+/* Enable DMAC so the SAM0 UART driver can select async support */
+&dmac {
+    status = "okay";
+};
