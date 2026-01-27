@@ -221,8 +221,8 @@ def run(device='/dev/ttyACM0', baud=9600):
             print('  No response')
 
 if __name__ == '__main__':
-    dev = '/dev/ttyACM0'
-    baud = 9600
+    dev = '/dev/ttyUSB0'
+    baud = 115200
     if len(sys.argv) > 1:
         dev = sys.argv[1]
     if len(sys.argv) > 2:
