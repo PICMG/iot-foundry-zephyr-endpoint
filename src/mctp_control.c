@@ -96,7 +96,6 @@ struct get_mctp_version_support_response {
     uint8_t command_code;
     uint8_t completion_code;
     uint8_t version_number_entry_count;
-    uint8_t endpoint_type;
     struct mctp_version_entry versions[MCTP_MAX_VERSIONS_PER_TYPE];
 } __packed;
 
@@ -130,13 +129,18 @@ struct control_completion_response {
  * duplicated the relevant mctp struct definitions here to allow access to the eid field.
  * This should be removed when libmctp is updated to include a proper API for this. 
  */
+/* When running the posix unit test build the minimal `struct mctp` and
+ * access macros are provided by `mctp_control.h`. Avoid redefining them
+ * here to prevent duplicate-definition errors.
+ */
+#ifndef MCTP_POSIX_UNIT_TEST
 struct mctp_bus {
-	mctp_eid_t eid;
+    mctp_eid_t eid;
 };
 
 struct mctp {
-	int n_busses;
-	struct mctp_bus *busses;
+    int n_busses;
+    struct mctp_bus *busses;
 };
 
 // Macro to get/set EID from/in mctp struct
@@ -144,6 +148,7 @@ struct mctp {
 #define GET_EID_FROM_MCTP(mctp_ptr) (((struct mctp_bus *)(mctp_ptr->busses))->eid)
 #define SET_EID_IN_MCTP(mctp_ptr, new_eid) ((((struct mctp_bus *)(mctp_ptr->busses))->eid) = (new_eid))
 /* end TODO */
+#endif /* MCTP_POSIX_UNIT_TEST */
 
 /**
  * @brief Send a control completion response message.
@@ -163,7 +168,6 @@ static void send_control_completion_response(struct mctp *mctp, uint8_t remote_e
         // silently drop packet
         return;
     }
-    return;
     struct control_msg_request *req = (struct control_msg_request *)msg;
     struct control_completion_response resp;
     resp.ic_msg_type = req->ic_msg_type;

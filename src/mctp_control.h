@@ -14,10 +14,39 @@
 #define MCTP_CONTROL_H
 
 #include <stdlib.h>
+#ifdef MCTP_POSIX_UNIT_TEST
+#include <stdint.h>
+#include <stdbool.h>
+#include "libmctp.h"
+/* Minimal mctp struct definitions used by the control handlers (mirrors
+ * internal definitions in mctp_control.c). These are provided for unit
+ * tests so test code can construct a small mctp instance.
+ */
+struct mctp_bus {
+    mctp_eid_t eid;
+};
+
+struct mctp {
+    int n_busses;
+    struct mctp_bus *busses;
+};
+/* helper macros for test builds to access EID in the minimal mctp struct */
+#define GET_EID_FROM_MCTP(mctp_ptr) (((struct mctp_bus *)(mctp_ptr->busses))->eid)
+#define SET_EID_IN_MCTP(mctp_ptr, new_eid) ((((struct mctp_bus *)(mctp_ptr->busses))->eid) = (new_eid))
+/* prototype used by tests to stub transport */
+int mctp_message_tx(struct mctp *mctp, uint8_t remote_eid, bool tag_owner, uint8_t msg_tag, const void *msg, size_t msg_len);
+/* Minimal logging macros for unit tests */
+#include <stdio.h>
+#define LOG_MODULE_REGISTER(name, level)
+#define LOG_INF(fmt, ...) printf(fmt "\n", ##__VA_ARGS__)
+#define LOG_DBG(fmt, ...) printf(fmt "\n", ##__VA_ARGS__)
+#define LOG_ERR(fmt, ...) printf(fmt "\n", ##__VA_ARGS__)
+#else
 #include <zephyr/types.h>
 #include <libmctp.h>
 #include <zephyr/pmci/mctp/mctp_uart.h>
 #include <zephyr/logging/log.h>
+#endif
 
 #define MCTP_CTRL_HDR_MSG_TYPE      0
 

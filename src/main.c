@@ -70,6 +70,11 @@ static void rx_message(uint8_t remote_eid, bool tag_owner, uint8_t msg_tag, void
 {
 	struct echo_msg emsg;
 
+	// ignore non requests
+	if (!tag_owner) {
+		return;
+	}
+
 	emsg.remote_eid = remote_eid;
 	emsg.tag_owner = !tag_owner; /* reply toggles tag owner */
 	emsg.msg_tag = msg_tag;
@@ -108,11 +113,6 @@ int main(void)
 		if (k_msgq_get(&echo_q, &em, K_FOREVER) == 0) {
 			LOG_DBG("dequeued echo for eid %d len %zu tag %u", em.remote_eid, em.len, em.msg_tag);
 		
-			// ignore non requests
-			if (!em.tag_owner) {
-				LOG_WRN("message not a request, dropping");
-				continue;
-			}
 			const struct mctp_ctrl_msg_hdr *hdr = (const struct mctp_ctrl_msg_hdr *)em.data;
 			if ((em.len >= sizeof(struct mctp_ctrl_msg_hdr)) && 
 				(hdr->ic_msg_type == MCTP_CTRL_HDR_MSG_TYPE)) {
