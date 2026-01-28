@@ -1,0 +1,3 @@
+[submodule "pldm"]
+	path = pldm
+	url = https://github.com/openbmc/libpldm.git
