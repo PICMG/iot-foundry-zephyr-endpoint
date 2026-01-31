@@ -82,7 +82,7 @@ The environment is now installed and ready to use.  Note that sourcing the virtu
 Lastly, if building with PLDM support enabled, you may use the iot-builder to create build switches and PDR data for your project.
 ```bash
 cd <application_path>
-./build-host/iot_builder/iot_builder ./tools/iot_builder/src/builder/sample_config.json ./src/pdrs
+./build-host/iot_builder/iot_builder ./tools/iot_builder/src/builder/sample_config.json ./src/pdrs/
 
 ```
 
@@ -93,7 +93,7 @@ To build the project, use the following commands:
 cd <workspace_path>
 west build -p auto -b arduino_nano_33_iot <application_path>
 # our use this to enable pldm:
-west build -b arduino_nano_33_iot -d /home/doug/zephyrproject/build /home/doug/git/iot-foundry-zephyr-endpoint -- -DINCLUDE_PLDM=1
+west build -b arduino_nano_33_iot -d /home/doug/zephyrproject/build /home/doug/git/iot-foundry-zephyr-endpoint -- -DINCLUDE_PLDM=ON
 ```
 The device can be programmed using:
 ```bash
