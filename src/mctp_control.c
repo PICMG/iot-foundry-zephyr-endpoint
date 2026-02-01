@@ -189,7 +189,7 @@ void send_completion_response(struct mctp *mctp, uint8_t remote_eid, bool tag_ow
  * This function is called internally to set up the initial state
  * of the versions map before any other operations are performed.
  */
-static void initialize_versions_map(void)
+void initialize_versions_map(void)
 {
     for (size_t i = 0; i < MCTP_MAX_MSG_TYPES; i++) {
         mctp_versions_map[i].used = 0;
@@ -265,8 +265,7 @@ int mctp_versions_map_add(uint8_t msg_type, const struct mctp_version_entry *ver
 struct mctp_versions_entry *mctp_versions_map_get(uint8_t msg_type)
 {
     if (!mctp_versions_initialized) {
-        initialize_versions_map();
-        mctp_versions_initialized = true;
+        return NULL;
     }
 
     for (size_t i = 0; i < MCTP_MAX_MSG_TYPES; i++) {
@@ -446,27 +445,32 @@ int process_get_message_type_support_control_message(struct mctp *mctp, uint8_t 
 
     // message body for response
     struct get_message_type_support_response resp;
+    memset(&resp, 0, sizeof(resp));
+
     resp.ic_msg_type = req->ic_msg_type;
     resp.rq_dgram_inst = req->rq_dgram_inst & ~0x80;  // clear request bit
     resp.command_code = req->command_code;
     resp.completion_code = CONTROL_COMPLETE_SUCCESS;
-    
-    if (!mctp_versions_initialized) {
-        initialize_versions_map();
-        mctp_versions_initialized = true;
-    }
+
     resp.type_count = 0;
     for (int i = 0; i < MCTP_MAX_MSG_TYPES; i++) {
-        if (mctp_versions_map[i].used) {
-            resp.types[resp.type_count++] = mctp_versions_map[i].msg_type;
+        if (!mctp_versions_map[i].used) {
+            break;
         }
+        resp.types[resp.type_count] = mctp_versions_map[i].msg_type;
+        resp.type_count++;
     }
-
+    // total possible size of the response
+    size_t size1 = sizeof(struct get_message_type_support_response);
+    // size of the unused types in the table
+    size_t size2 = (MCTP_MAX_MSG_TYPES - resp.type_count) * sizeof(uint8_t);
+    size_t resp_size = size1 - size2;
+    LOG_DBG("Get Message Type Resp Size: %u", (uint32_t)resp_size);
+    // return CONTROL_COMPLETE_UNSUPPORTED_CMD;
+    
     // send the response
     mctp_message_tx(mctp, remote_eid, !tag_owner, msg_tag,
-                    &resp, sizeof(struct get_message_type_support_response)-
-                          (MCTP_MAX_MSG_TYPES - resp.type_count) * sizeof(uint8_t));        
-
+                    &resp, resp_size);        
     return CONTROL_COMPLETE_SUCCESS;
 }
 

@@ -65,7 +65,7 @@ west init -m <application_path>
 west update
 ```
 Now that the workspace is initialized, it is important to install any further python dependencies required by `west` and optionally install the Zephyr sdk.
-```
+```bash
 # install Zephyr Python dependencies and sdk.
 west packages pip --install
 west sdk install

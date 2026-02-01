@@ -592,7 +592,11 @@ int handle_fru_msg(const void *req_msg, size_t req_len, void *resp_msg, size_t *
  */
 int init_pldm() {
     // Initialize the PLDM control processing module
-	pldm_control_setup(&pldm_control_ctx, sizeof(pldm_control_ctx));
+	pldm_control_setup(&pldm_control_ctx, sizeof(struct pldm_control));
+	
+    // add support for PLDM Message Type 1 (PLDM Base)
+	mctp_versions_map_add(MCTP_PLDM_HDR_MSG_TYPE, &(struct mctp_version_entry){ .major_version = 0xf1, .minor_version = 0xf1, .update_version = 0xff, .alpha_version = 0 });
+	mctp_versions_map_add(MCTP_PLDM_HDR_MSG_TYPE, &(struct mctp_version_entry){ .major_version = 0xf1, .minor_version = 0xf0, .update_version = 0xff, .alpha_version = 0 });
 	
 	// add the supported types/commands - PLDM Base already exists
 	// PLDM FRU
@@ -645,7 +649,6 @@ int init_pldm() {
 		LOG_ERR("Failed to initialize PLDM FRU repository");
 		return -ENOMEM;
 	}
-
 	return 0;
 }
 

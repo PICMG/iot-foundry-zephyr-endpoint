@@ -75,6 +75,9 @@ struct mctp_version_entry {
     uint8_t alpha_version;
 } __packed;
 
+// initialize the versions map
+void initialize_versions_map(void);
+
 // send a control message using MCTP
 int send_control_message(struct mctp *mctp, uint8_t eid, bool tag_owner, uint8_t msg_tag, const void *msg, size_t msg_len);
 

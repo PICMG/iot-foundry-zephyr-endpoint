@@ -20,6 +20,8 @@ target_sources(app PRIVATE src/main.c src/mctp_control.c src/process_pldm.c)
 option(BUILD_HOST_TOOLS "Build host-only tools (not for cross/Zephyr builds)" OFF)
 
 if(INCLUDE_PLDM)
+  # Expose the option to the C compiler so `#ifdef INCLUDE_PLDM` works
+  target_compile_definitions(app PRIVATE INCLUDE_PLDM=1)
   # Prefer a lightweight CMake wrapper shipped in the superproject that
   # compiles selected libpldm sources. If not present, fall back to the
   # upstream `pldm` directory (which uses Meson and may not be usable here).

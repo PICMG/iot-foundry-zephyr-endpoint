@@ -23,6 +23,7 @@ if(NOT DEFINED PLDM_SRC_PATTERNS)
     # include DSP helpers (header/decoder/encoder helpers) required by
     # control.c and other callers (e.g. unpack_pldm_header, encode_* / decode_*)
     "${PLDM_ROOT}/src/dsp/*.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/reent_stub.c"
   )
 endif()
 
@@ -39,6 +40,18 @@ if(NOT PLDM_SRCS)
 endif()
 
 add_library(libpldm STATIC ${PLDM_SRCS})
+
+# Prefer to inherit compile options and definitions from the Zephyr `app`
+# target when this wrapper is added as a subdirectory of the application.
+# This avoids hardcoding architecture-specific flags (like -mthumb) while
+# ensuring libpldm is built with the same toolchain flags as the app.
+if(TARGET app)
+  target_compile_options(libpldm PUBLIC $<TARGET_PROPERTY:app,COMPILE_OPTIONS>)
+  target_compile_definitions(libpldm PUBLIC $<TARGET_PROPERTY:app,COMPILE_DEFINITIONS>)
+  message(STATUS "pldm-cmake: inheriting compile options/defs from 'app'")
+else()
+  message(STATUS "pldm-cmake: 'app' target not found; building libpldm with default CMake flags")
+endif()
 
 # Expose the upstream include directories so callers can include <pldm/...>
 target_include_directories(libpldm
