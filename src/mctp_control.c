@@ -151,9 +151,9 @@ struct mctp {
 #endif /* MCTP_POSIX_UNIT_TEST */
 
 /**
- * @brief Send a control completion response message.
+ * @brief Send a completion response message.
  * 
- * Constructs and sends a control completion response message
+ * Constructs and sends a completion response message
  * with the specified parameters.
  * 
  * @param mctp Pointer to the MCTP instance.
@@ -163,7 +163,7 @@ struct mctp {
  * @param command_code The command code of the original request.
  * @param completion_code The completion code to include in the response.
  */
-static void send_control_completion_response(struct mctp *mctp, uint8_t remote_eid, bool tag_owner, uint8_t msg_tag, const void *msg, size_t len, uint8_t completion_code) {
+void send_completion_response(struct mctp *mctp, uint8_t remote_eid, bool tag_owner, uint8_t msg_tag, const void *msg, size_t len, uint8_t completion_code) {
     if (len<sizeof(struct control_msg_request)) {
         // silently drop packet
         return;
@@ -189,7 +189,7 @@ static void send_control_completion_response(struct mctp *mctp, uint8_t remote_e
  * This function is called internally to set up the initial state
  * of the versions map before any other operations are performed.
  */
-static void initialize_versions_map(void)
+void initialize_versions_map(void)
 {
     for (size_t i = 0; i < MCTP_MAX_MSG_TYPES; i++) {
         mctp_versions_map[i].used = 0;
@@ -265,8 +265,7 @@ int mctp_versions_map_add(uint8_t msg_type, const struct mctp_version_entry *ver
 struct mctp_versions_entry *mctp_versions_map_get(uint8_t msg_type)
 {
     if (!mctp_versions_initialized) {
-        initialize_versions_map();
-        mctp_versions_initialized = true;
+        return NULL;
     }
 
     for (size_t i = 0; i < MCTP_MAX_MSG_TYPES; i++) {
@@ -446,27 +445,32 @@ int process_get_message_type_support_control_message(struct mctp *mctp, uint8_t 
 
     // message body for response
     struct get_message_type_support_response resp;
+    memset(&resp, 0, sizeof(resp));
+
     resp.ic_msg_type = req->ic_msg_type;
     resp.rq_dgram_inst = req->rq_dgram_inst & ~0x80;  // clear request bit
     resp.command_code = req->command_code;
     resp.completion_code = CONTROL_COMPLETE_SUCCESS;
-    
-    if (!mctp_versions_initialized) {
-        initialize_versions_map();
-        mctp_versions_initialized = true;
-    }
+
     resp.type_count = 0;
     for (int i = 0; i < MCTP_MAX_MSG_TYPES; i++) {
-        if (mctp_versions_map[i].used) {
-            resp.types[resp.type_count++] = mctp_versions_map[i].msg_type;
+        if (!mctp_versions_map[i].used) {
+            break;
         }
+        resp.types[resp.type_count] = mctp_versions_map[i].msg_type;
+        resp.type_count++;
     }
-
+    // total possible size of the response
+    size_t size1 = sizeof(struct get_message_type_support_response);
+    // size of the unused types in the table
+    size_t size2 = (MCTP_MAX_MSG_TYPES - resp.type_count) * sizeof(uint8_t);
+    size_t resp_size = size1 - size2;
+    LOG_DBG("Get Message Type Resp Size: %u", (uint32_t)resp_size);
+    // return CONTROL_COMPLETE_UNSUPPORTED_CMD;
+    
     // send the response
     mctp_message_tx(mctp, remote_eid, !tag_owner, msg_tag,
-                    &resp, sizeof(struct get_message_type_support_response)-
-                          (MCTP_MAX_MSG_TYPES - resp.type_count) * sizeof(uint8_t));        
-
+                    &resp, resp_size);        
     return CONTROL_COMPLETE_SUCCESS;
 }
 
@@ -487,7 +491,7 @@ int send_control_message(struct mctp *mctp, uint8_t eid, bool tag_owner, uint8_t
     const struct control_msg_request *hdr = (const struct control_msg_request *)msg;
     if (msg_len < sizeof(struct control_msg_request)) {
         LOG_ERR("Control message too short: %zu", msg_len);
-        send_control_completion_response(mctp, eid, tag_owner, msg_tag, msg, msg_len, CONTROL_COMPLETE_INVALID_LENGTH);
+        send_completion_response(mctp, eid, tag_owner, msg_tag, msg, msg_len, CONTROL_COMPLETE_INVALID_LENGTH);
         return CONTROL_COMPLETE_INVALID_LENGTH;
     }
 
@@ -511,7 +515,7 @@ int send_control_message(struct mctp *mctp, uint8_t eid, bool tag_owner, uint8_t
     }
     if (completion_code != CONTROL_COMPLETE_SUCCESS) {
         LOG_DBG("Sending Error Response: %u", completion_code);
-        send_control_completion_response(mctp, eid, tag_owner, msg_tag, msg, msg_len, completion_code);
+        send_completion_response(mctp, eid, tag_owner, msg_tag, msg, msg_len, completion_code);
     }
     return completion_code;
 }

@@ -49,6 +49,7 @@ int mctp_message_tx(struct mctp *mctp, uint8_t remote_eid, bool tag_owner, uint8
 #endif
 
 #define MCTP_CTRL_HDR_MSG_TYPE      0
+#define MCTP_PLDM_HDR_MSG_TYPE      1
 
 /* control message codes */
 #define CONTROL_MSG_SET_ENDPOINT_ID 0x01
@@ -74,8 +75,14 @@ struct mctp_version_entry {
     uint8_t alpha_version;
 } __packed;
 
+// initialize the versions map
+void initialize_versions_map(void);
+
 // send a control message using MCTP
 int send_control_message(struct mctp *mctp, uint8_t eid, bool tag_owner, uint8_t msg_tag, const void *msg, size_t msg_len);
+
+// send control completion response
+void send_completion_response(struct mctp *mctp, uint8_t remote_eid, bool tag_owner, uint8_t msg_tag, const void *msg, size_t len, uint8_t completion_code);
 
 // add a supported version for a message type
 int mctp_versions_map_add(uint8_t msg_type, const struct mctp_version_entry *ver);

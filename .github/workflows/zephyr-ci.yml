@@ -55,3 +55,14 @@ jobs:
         run: |
           west build -b native_sim tests/mctp_posix_uart_stub -p auto
           west build -t run
+
+      - name: Build and run native pldm_tb tests
+        env:
+          PATH: ${{ env.PATH }}:${{ runner.home }}/.local/bin
+        run: |
+          mkdir -p tests/pldm_tb/build_native
+          pushd tests/pldm_tb/build_native
+          cmake ..
+          cmake --build . -j
+          ./pldm_tb ../tests.json -v
+          popd

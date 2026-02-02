@@ -1,0 +1,6 @@
+[submodule "pldm"]
+	path = pldm
+	url = https://github.com/openbmc/libpldm.git
+[submodule "tools/iot_builder"]
+	path = tools/iot_builder
+	url = https://github.com/PICMG/iot_builder.git

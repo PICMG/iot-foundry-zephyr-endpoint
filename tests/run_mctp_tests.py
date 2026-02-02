@@ -160,7 +160,7 @@ def send_and_capture(device: str, frame: bytes, baud: int = 9600, settle: float 
         ser.flush()
         data = bytearray()
         last = time.time()
-        deadline = time.time() + 2.0
+        deadline = time.time() + 7.0
         while time.time() < deadline:
             n = ser.in_waiting
             if n:

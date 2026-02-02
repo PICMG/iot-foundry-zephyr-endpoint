@@ -1,0 +1,321 @@
+[
+  {
+    "name": "GetTID",
+    "message": "800002",
+    "expected": "0000020000",
+    "completion_code": 0
+  },
+  {
+    "name": "GetPLDMTypes",
+    "message": "800004",
+    "expected": "000004000100000000000000",
+    "completion_code": 0
+  },
+  {
+    "name": "GetPLDMVersion",
+    "message": "800003000000000100",
+    "expected": "00000300000000000500f0f1f1babe9d53",
+    "completion_code": 0
+  },
+  {
+    "name": "GetPLDMCommands",
+    "message": "8000050000f0f1f1",
+    "expected": "000005003c00000000000000000000000000000000000000000000000000000000000000",
+    "completion_code": 0
+  },
+  {
+    "name": "Platform_Effecter_SetNumericEffecterValue_Unsupported",
+    "message": "800231",
+    "expected": "00023105",
+    "completion_code": 0
+  },
+  {
+    "name": "Platform_Event_PlatformEventMessage_Unsupported",
+    "message": "80020a",
+    "expected": "00020a05",
+    "completion_code": 0
+  },
+  {
+    "name": "Platform_Log_GetPLDMEventLogInfo_Unsupported",
+    "message": "800240",
+    "expected": "00024005",
+    "completion_code": 0
+  },
+  {
+    "name": "Platform_NumericSensor_GetSensorReading_Unsupported",
+    "message": "800211",
+    "expected": "00021105",
+    "completion_code": 0
+  },
+  {
+    "name": "Platform_PDR_GetPDR_Unsupported",
+    "message": "800251",
+    "expected": "00025105",
+    "completion_code": 0
+  },
+  {
+    "name": "Platform_StateSensor_GetStateSensorReadings_Unsupported",
+    "message": "800221",
+    "expected": "00022105",
+    "completion_code": 0
+  },
+  {
+    "name": "FRU_GetFRURecordTable_Unsupported",
+    "message": "800402",
+    "expected": "00040205",
+    "completion_code": 0
+  },
+  {
+    "name": "SetTID_Unsupported",
+    "message": "800001",
+    "expected": "00000105",
+    "completion_code": 0
+  },
+  {
+    "name": "SelectPLDMVersion_Unsupported",
+    "message": "800006",
+    "expected": "00000605",
+    "completion_code": 0
+  },
+  {
+    "name": "NegotiateTransferParameters_Unsupported",
+    "message": "800007",
+    "expected": "00000705",
+    "completion_code": 0
+  },
+  {
+    "name": "MultipartSend_Unsupported",
+    "message": "800008",
+    "expected": "00000805",
+    "completion_code": 0
+  },
+  {
+    "name": "MultipartReceive_Unsupported",
+    "message": "800009",
+    "expected": "00000905",
+    "completion_code": 0
+  },
+  {
+    "name": "GetMultipartTransferSupport_Unsupported",
+    "message": "80000a",
+    "expected": "00000a05",
+    "completion_code": 0
+  },
+  {
+    "name": "InvalidCommand",
+    "message": "8000fe",
+    "expected": "0000fe05",
+    "completion_code": 0
+  }
+,
+  {
+    "name": "Platform_GetTerminusUID_Unsupported",
+    "message": "800203",
+    "expected": "00020305",
+    "completion_code": 0
+  },
+  {
+    "name": "Platform_SetEventReceiver_Unsupported",
+    "message": "800204",
+    "expected": "00020405",
+    "completion_code": 0
+  },
+  {
+    "name": "Platform_GetEventReceiver_Unsupported",
+    "message": "800205",
+    "expected": "00020505",
+    "completion_code": 0
+  },
+  {
+    "name": "Platform_PollForPlatformEventMessage_Unsupported",
+    "message": "80020b",
+    "expected": "00020b05",
+    "completion_code": 0
+  },
+  {
+    "name": "Platform_EventMessageSupported_Unsupported",
+    "message": "80020c",
+    "expected": "00020c05",
+    "completion_code": 0
+  },
+  {
+    "name": "Platform_EventMessageBufferSize_Unsupported",
+    "message": "80020d",
+    "expected": "00020d05",
+    "completion_code": 0
+  },
+  {
+    "name": "Platform_SetNumericSensorEnable_Unsupported",
+    "message": "800210",
+    "expected": "00021005",
+    "completion_code": 0
+  },
+  {
+    "name": "Platform_GetSensorThresholds_Unsupported",
+    "message": "800212",
+    "expected": "00021205",
+    "completion_code": 0
+  },
+  {
+    "name": "Platform_SetSensorThresholds_Unsupported",
+    "message": "800213",
+    "expected": "00021305",
+    "completion_code": 0
+  },
+  {
+    "name": "Platform_RestoreSensorThresholds_Unsupported",
+    "message": "800214",
+    "expected": "00021405",
+    "completion_code": 0
+  },
+  {
+    "name": "Platform_GetSensorHysteresis_Unsupported",
+    "message": "800215",
+    "expected": "00021505",
+    "completion_code": 0
+  },
+  {
+    "name": "Platform_SetSensorHysteresis_Unsupported",
+    "message": "800216",
+    "expected": "00021605",
+    "completion_code": 0
+  },
+  {
+    "name": "Platform_InitNumericSensor_Unsupported",
+    "message": "800217",
+    "expected": "00021705",
+    "completion_code": 0
+  },
+  {
+    "name": "Platform_SetStateSensorEnables_Unsupported",
+    "message": "800220",
+    "expected": "00022005",
+    "completion_code": 0
+  },
+  {
+    "name": "Platform_InitStateSensor_Unsupported",
+    "message": "800222",
+    "expected": "00022205",
+    "completion_code": 0
+  },
+  {
+    "name": "Platform_SetNumericEffecterEnable_Unsupported",
+    "message": "800230",
+    "expected": "00023005",
+    "completion_code": 0
+  },
+  {
+    "name": "Platform_GetNumericEffecterValue_Unsupported",
+    "message": "800232",
+    "expected": "00023205",
+    "completion_code": 0
+  },
+  {
+    "name": "Platform_SetStateEffecterEnables_Unsupported",
+    "message": "800238",
+    "expected": "00023805",
+    "completion_code": 0
+  },
+  {
+    "name": "Platform_SetStateEffecterStates_Unsupported",
+    "message": "800239",
+    "expected": "00023905",
+    "completion_code": 0
+  },
+  {
+    "name": "Platform_GetStateEffecterStates_Unsupported",
+    "message": "80023a",
+    "expected": "00023a05",
+    "completion_code": 0
+  },
+  {
+    "name": "Platform_EnablePLDMEventLogging_Unsupported",
+    "message": "800241",
+    "expected": "00024105",
+    "completion_code": 0
+  },
+  {
+    "name": "Platform_ClearPLDMEventLog_Unsupported",
+    "message": "800242",
+    "expected": "00024205",
+    "completion_code": 0
+  },
+  {
+    "name": "Platform_GetPLDMEventLogTimestamp_Unsupported",
+    "message": "800243",
+    "expected": "00024305",
+    "completion_code": 0
+  },
+  {
+    "name": "Platform_SetPLDMEventLogTimestamp_Unsupported",
+    "message": "800244",
+    "expected": "00024405",
+    "completion_code": 0
+  },
+  {
+    "name": "Platform_ReadPLDMEventLog_Unsupported",
+    "message": "800245",
+    "expected": "00024505",
+    "completion_code": 0
+  },
+  {
+    "name": "Platform_GetPLDMEventLogPolicyInfo_Unsupported",
+    "message": "800246",
+    "expected": "00024605",
+    "completion_code": 0
+  },
+  {
+    "name": "Platform_SetPLDMEventLogPolicy_Unsupported",
+    "message": "800247",
+    "expected": "00024705",
+    "completion_code": 0
+  },
+  {
+    "name": "Platform_FindPLDMEventLogEntry_Unsupported",
+    "message": "800248",
+    "expected": "00024805",
+    "completion_code": 0
+  },
+  {
+    "name": "Platform_GetPDRRepositoryInfo_Unsupported",
+    "message": "800250",
+    "expected": "00025005",
+    "completion_code": 0
+  },
+  {
+    "name": "Platform_FindPDR_Unsupported",
+    "message": "800252",
+    "expected": "00025205",
+    "completion_code": 0
+  },
+  {
+    "name": "Platform_RunInitAgent_Unsupported",
+    "message": "800258",
+    "expected": "00025805",
+    "completion_code": 0
+  },
+  {
+    "name": "Platform_GetPDRRepositorySignature_Unsupported",
+    "message": "800253",
+    "expected": "00025305",
+    "completion_code": 0
+  },
+  {
+    "name": "FRU_GetFRURecordTableMetadata_Unsupported",
+    "message": "800401",
+    "expected": "00040105",
+    "completion_code": 0
+  },
+  {
+    "name": "FRU_SetFRURecordTable_Unsupported",
+    "message": "800403",
+    "expected": "00040305",
+    "completion_code": 0
+  },
+  {
+    "name": "FRU_GetFRURecordByOption_Unsupported",
+    "message": "800404",
+    "expected": "00040405",
+    "completion_code": 0
+  }
+]
