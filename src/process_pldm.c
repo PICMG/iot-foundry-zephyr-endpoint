@@ -425,6 +425,8 @@ int handle_pldm_message(struct mctp *mctp, uint8_t remote_eid, bool tag_owner, u
 			// fix issue with wrong type byte
 			pldm_tx_buf[2] = hdr.pldm_type;   // copy the type from the request
 			if (rc >= 0) {
+				LOG_DBG("TX (BASE): len=%zu", resp_len + 1);
+				LOG_HEXDUMP_DBG(pldm_tx_buf, resp_len + 1, "TX (BASE) bytes");
 				mctp_message_tx(mctp, remote_eid, !tag_owner, msg_tag, pldm_tx_buf, resp_len + 1);
             	return rc;
 			}
@@ -435,6 +437,8 @@ int handle_pldm_message(struct mctp *mctp, uint8_t remote_eid, bool tag_owner, u
 			// fix issue with wrong type byte
 			pldm_tx_buf[2] = hdr.pldm_type;   // copy the type from the request
 			if (rc >= 0) {
+				LOG_DBG("TX (FRU): len=%zu", resp_len + 1);
+				LOG_HEXDUMP_DBG(pldm_tx_buf, resp_len + 1, "TX (FRU) bytes");
 				mctp_message_tx(mctp, remote_eid, !tag_owner, msg_tag, pldm_tx_buf, resp_len + 1);
             	return rc;
 			}
@@ -445,6 +449,8 @@ int handle_pldm_message(struct mctp *mctp, uint8_t remote_eid, bool tag_owner, u
 			// fix issue with wrong type byte
 			pldm_tx_buf[2] = hdr.pldm_type;   // copy the type from the request
 			if (rc >= 0) {
+				LOG_DBG("TX (PLATFORM): len=%zu", resp_len + 1);
+				LOG_HEXDUMP_DBG(pldm_tx_buf, resp_len + 1, "TX (PLATFORM) bytes");
 				mctp_message_tx(mctp, remote_eid, !tag_owner, msg_tag, pldm_tx_buf, resp_len + 1);
             	return rc;
 			}
@@ -454,12 +460,29 @@ int handle_pldm_message(struct mctp *mctp, uint8_t remote_eid, bool tag_owner, u
     }
 
 	LOG_DBG("Sending Error Response: %u", rc);
-	// construct the response message in the rx buffer
-	pldm_tx_buf[0] = MCTP_PLDM_HDR_MSG_TYPE; // first byte is always the MCTP PLDM type
-	pldm_tx_buf[1] = req->hdr.instance_id;   // copy the instance ID
-	pldm_tx_buf[2] = (hdr.pldm_type & 0x3F) | (1 << 6); // set the request bit to 0 for response
-	pldm_tx_buf[3] = hdr.command;            // copy the command
-	pldm_tx_buf[4] = (uint8_t)rc;            // completion code
-	mctp_message_tx(mctp, remote_eid, tag_owner, msg_tag, pldm_tx_buf, 5);
-    return rc;
+	/* Build the PLDM response header using the libpldm helper to avoid
+	 * manual bit-twiddling and ensure correct request/tag polarity. */
+	pldm_tx_buf[0] = MCTP_PLDM_HDR_MSG_TYPE; /* MCTP PLDM type byte */
+	{
+		struct pldm_header_info resp_hdr = { 0 };
+		resp_hdr.msg_type = PLDM_RESPONSE;
+		resp_hdr.instance = hdr.instance;
+		resp_hdr.pldm_type = hdr.pldm_type;
+		resp_hdr.command = hdr.command;
+
+		uint8_t ph_rc = pack_pldm_header(&resp_hdr, (struct pldm_msg_hdr *)(pldm_tx_buf + 1));
+		if (ph_rc != PLDM_SUCCESS) {
+			LOG_ERR("pack_pldm_header failed: %u", ph_rc);
+			return PLDM_ERROR;
+		}
+
+		size_t hdr_sz = sizeof(struct pldm_msg_hdr);
+		/* write completion code as first payload byte */
+		pldm_tx_buf[1 + hdr_sz] = (uint8_t)rc;
+
+		/* total bytes: MCTP type + PLDM header + completion_code */
+		size_t total_len = 1 + hdr_sz + 1;
+		mctp_message_tx(mctp, remote_eid, !tag_owner, msg_tag, pldm_tx_buf, total_len);
+	}
+	return rc;
 }

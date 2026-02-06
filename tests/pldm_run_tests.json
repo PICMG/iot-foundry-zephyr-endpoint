@@ -1,0 +1,54 @@
+[
+  {
+    "name": "GetTID",
+    "payload": "800002",
+    "expected": "0000020000",
+    "expected_code": 0
+  },
+  {
+    "name": "GetPLDMTypes",
+    "payload": "800004",
+    "expected": "000004000100000000000000",
+    "expected_code": 0
+  },
+  {
+    "name": "GetPLDMVersion",
+    "payload": "800003000000000100",
+    "expected": "00000300000000000500f0f1f1babe9d53",
+    "expected_code": 0
+  },
+  {
+    "name": "GetPDRRepositoryInfo",
+    "payload": "800250",
+    "expected": "0002500000****************************************************130000005a030000ae00000000",
+    "expected_code": 0
+  },
+  {
+    "name": "GetPDR_FirstRecord_Request",
+    "payload": "80025100000000000000000001200000",
+    "expected": "000251000200000000000000050900010001010100010101",
+    "expected_code": 0
+  },
+  {
+    "name": "GetPDR_FirstRecord_Request_Small",
+    "payload": "80025100000000000000000001080000",
+    "expected": "000251000200000000000000050900010001010100010101",
+    "expected_code": 0
+  }
+  ,
+  {
+    "name": "GetPDR_Malformed_TooShort",
+    "payload": "8002510000000000",
+    "expected_code": 3
+  },
+  {
+    "name": "GetPDR_InvalidRecordHandle",
+    "payload": "800251ffffffff000000000012000000",
+    "expected_code": 130
+  },
+  {
+    "name": "GetPDR_InvalidDataTransferHandle",
+    "payload": "80025100000000ffffffff0012000000",
+    "expected_code": 128
+  }
+]

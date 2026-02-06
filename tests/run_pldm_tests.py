@@ -7,6 +7,9 @@ to the remote EID (default 0) and prints parsed PLDM response fields.
 import time
 import serial
 import sys
+import json
+import argparse
+import os
 
 FRAME_CHAR = 0x7E
 ESCAPE_CHAR = 0x7D
@@ -109,8 +112,10 @@ def parse_frame(data: bytes):
     
     response_index = 10
     extra = b""
-    if len(payload) > response_index:
-        extra = payload[response_index:]
+    # payload layout: [protocol(1), byte_count(1), body(byte_count), fcs_hi(1), fcs_lo(1)]
+    body_end = 2 + byte_count
+    if len(payload) > response_index and body_end > response_index:
+        extra = payload[response_index:body_end]
     return {
         'protocol': protocol,
         'byte_count': byte_count,
@@ -241,34 +246,110 @@ def pretty_print_pldm_response(resp: bytes):
     print(f'  Response code: 0x{info["resp_code"]:02X}')
     print(f'  Payload ({len(payload)} bytes):', ' '.join(f"{b:02X}" for b in payload))
 
-def run(device='/dev/ttyACM0', baud=9600):
-    tests = []
+def hex_to_bytes(hexstr: str) -> bytes:
+    s = ''.join(hexstr.split())
+    return bytes.fromhex(s)
 
-    # GET_TID (no request payload)
-    tests.append(('GET_TID', build_pldm_msg(PLDM_GET_TID)))
-    
-    # GET_PLDM_VERSION: transfer_handle (4 le), transfer_opflag (1), type (1)
-    transfer_handle = (0).to_bytes(4, 'little')
-    transfer_opflag = (1).to_bytes(1, 'little')
-    pldm_type = (PLDM_BASE).to_bytes(1, 'little')
-    tests.append(('GET_PLDM_VERSION', build_pldm_msg(PLDM_GET_PLDM_VERSION, payload=transfer_handle + transfer_opflag + pldm_type)))
 
-    # GET_PLDM_TYPES (no payload)
-    tests.append(('GET_PLDM_TYPES', build_pldm_msg(PLDM_GET_PLDM_TYPES)))
+def hex_to_pattern(hexstr: str):
+    """Convert a hex string possibly containing '**' wildcard byte tokens
+    into a list of integers or None (for wildcards). '**' represents one
+    ignored byte. Whitespace is ignored.
+    """
+    s = ''.join(hexstr.split())
+    if len(s) % 2 != 0:
+        raise ValueError('hex string must have even length')
+    pattern = []
+    i = 0
+    while i < len(s):
+        pair = s[i:i+2]
+        if pair == '**':
+            pattern.append(None)
+        else:
+            try:
+                pattern.append(int(pair, 16))
+            except Exception:
+                raise
+        i += 2
+    return pattern
 
-    # GET_PLDM_COMMANDS: type (1) + version (4)
-    pldm_type = (PLDM_BASE).to_bytes(1, 'little')
-    ver = (0xF1F1F000).to_bytes(4, 'little')
-    tests.append(('GET_PLDM_COMMANDS', build_pldm_msg(PLDM_GET_PLDM_COMMANDS, payload=pldm_type + ver)))
-    
-    for name, pldm_msg in tests:
+
+def run(device='/dev/ttyACM0', baud=9600, tests_path=None, verbose=False):
+    # Default tests file is `pldm_run_tests.json` located next to this script
+    if not tests_path:
+        tests_path = os.path.join(os.path.dirname(__file__), 'pldm_run_tests.json')
+
+    try:
+        with open(tests_path, 'r') as f:
+            test_list = json.load(f)
+    except Exception as e:
+        print('Failed to load tests:', e)
+        return
+
+    total = 0
+    failed = 0
+    for t in test_list:
+        name = t.get('name', '(unnamed)')
+        payload_hex = t.get('payload')
+        expected_hex = t.get('expected')
+        expected_code = t.get('expected_code')
+        total += 1
+
+        if not payload_hex:
+            print('Skipping test (no payload):', name)
+            continue
+
+        pldm_msg = hex_to_bytes(payload_hex)
         print('\n===> Sending', name)
         frame = build_mctp_pldm_request(pldm_msg, dest=0)
         resp = send_and_capture(device, frame, baud)
-        if resp:
-            pretty_print_pldm_response(resp)
-        else:
+        if not resp:
             print('  No response')
+            failed += 1
+            continue
+
+        info = parse_frame(resp)
+        if not info:
+            print('  Could not parse response frame')
+            failed += 1
+            continue
+
+        # Reconstruct PLDM-style response bytes: instance,type,cmd + extra
+        resp_bytes = bytes([info['instance'] & 0xFF, info['type'] & 0xFF, info['cmd_code'] & 0xFF]) + info['extra']
+
+        ok = True
+        if expected_code is not None:
+            if info.get('resp_code') != expected_code:
+                ok = False
+        if expected_hex is not None:
+            try:
+                pattern = hex_to_pattern(expected_hex)
+            except Exception:
+                pattern = None
+            if pattern is None:
+                ok = False
+            else:
+                if len(pattern) != len(resp_bytes):
+                    ok = False
+                else:
+                    for idx, p in enumerate(pattern):
+                        if p is None:
+                            continue
+                        if p != resp_bytes[idx]:
+                            ok = False
+                            break
+
+        print('  PASS' if ok else '  FAIL')
+        if verbose or not ok:
+            print('  input:', payload_hex)
+            print('  expected_code:', expected_code)
+            print('  expected:', expected_hex)
+            print('  got code:', info.get('resp_code'))
+            print('  got resp:', ''.join(f"{b:02x}" for b in resp_bytes))
+        if not ok:
+            failed += 1
+
+    print('\nSummary: {}/{} failed'.format(failed, total))
 
 
 if __name__ == '__main__':
@@ -278,4 +359,7 @@ if __name__ == '__main__':
         dev = sys.argv[1]
     if len(sys.argv) > 2:
         baud = int(sys.argv[2])
-    run(dev, baud)
+    tests_path = None
+    if len(sys.argv) > 3:
+        tests_path = sys.argv[3]
+    run(dev, baud, tests_path)

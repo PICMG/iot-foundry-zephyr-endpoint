@@ -10,11 +10,26 @@
 #pragma once
 
 #include <stddef.h>
+#include <stdint.h>
 #include <libpldm/base.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/* Maximum MCTP payload available to encapsulated PLDM packets for
+ * MCTP-Serial baseline operation (DSP0236 baseline MTU = 64). This value
+ * represents the available MCTP payload bytes for PLDM and can be overriden
+ * by build configuration if needed.
+ */
+#ifndef MCTP_PAYLOAD_MAX
+#define MCTP_PAYLOAD_MAX 64
+#endif
+
+/* Build timestamp helper: returns a pointer to a 13-byte PLDM TIMESTAMP104
+ * value derived from the compile-time __DATE__ and __TIME__ macros.
+ */
+const uint8_t *get_build_timestamp104(void);
 
 /* platform event handlers - implemented in src/platform_terminus_uid.c */
 int handle_platform_get_terminus_uid(struct pldm_header_info *hdr,

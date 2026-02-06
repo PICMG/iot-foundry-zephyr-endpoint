@@ -44,6 +44,7 @@ if(INCLUDE_PLDM)
     ${CMAKE_CURRENT_SOURCE_DIR}/src/process_pldm.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/platform_*.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/fru.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/build_timestamp.c
   )
   if(PLATFORM_SRCS)
     target_sources(app PRIVATE ${PLATFORM_SRCS})
