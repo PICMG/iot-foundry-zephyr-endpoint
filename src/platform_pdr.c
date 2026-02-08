@@ -27,6 +27,16 @@
 
 LOG_MODULE_REGISTER(platform_pdr, LOG_LEVEL_DBG);
 
+/* Helper: compute PLDM transfer CRC over the full record bytes (including
+ * the 10-byte per-record header). The PLDM Transfer CRC is defined over
+ * the full record_data for the record, therefore compute over `record_ptr`
+ * of length `record_size`.
+ */
+static uint8_t compute_record_transfer_crc(const uint8_t *record_ptr, size_t record_size)
+{
+	return pldm_edac_crc8(record_ptr, (uint32_t)record_size);
+}
+
 
 /* Simple transfer-state table for GetPDR multipart transfers */
 #define PDR_XFER_TABLE_SIZE 8
@@ -341,7 +351,8 @@ int handle_platform_get_pdr(struct pldm_header_info *hdr, const void *req_msg, s
 	uint16_t resp_cnt = request_cnt;
 	if (resp_cnt > (uint16_t)max_data_by_mctp) resp_cnt = (uint16_t)max_data_by_mctp;
 
-	size_t record_payload_size = record_size - 10;
+	/* include the full record (header + record_data) as payload bytes */
+	size_t record_payload_size = record_size;
 
 	/* If the request asks for the whole record (or more), ensure resp_cnt
 	 * matches the actual record payload size when sending START_AND_END to
@@ -410,7 +421,7 @@ int handle_platform_get_pdr(struct pldm_header_info *hdr, const void *req_msg, s
 		if (transfer_offset + resp_cnt >= record_payload_size) {
 			transfer_flag = PLDM_PLATFORM_TRANSFER_END;
 			returned_next_transfer_handle = 0;
-			transfer_crc = pldm_edac_crc8(record_ptr + 10, record_payload_size);
+			transfer_crc = compute_record_transfer_crc(record_ptr, record_payload_size);
 			pdr_xfer_free_handle(e->handle);
 		} else {
 			transfer_flag = PLDM_PLATFORM_TRANSFER_MIDDLE;
@@ -423,7 +434,9 @@ int handle_platform_get_pdr(struct pldm_header_info *hdr, const void *req_msg, s
 	PLDM_MSG_BUFFER(msg_buf, MCTP_PAYLOAD_MAX);
 	memset(msg_buf, 0, sizeof(msg_buf));
 	struct pldm_msg *msg = (struct pldm_msg *)msg_buf;
-	const uint8_t *record_payload = record_ptr + 10 + transfer_offset;
+	/* payload is taken from the record start + transfer_offset (include header)
+	 * record_payload_size counts the full record bytes. */
+	const uint8_t *record_payload = record_ptr + transfer_offset;
 
 	rc = encode_get_pdr_resp(hdr->instance, PLDM_SUCCESS, next_record_handle, returned_next_transfer_handle, transfer_flag, resp_cnt, record_payload, transfer_crc, msg);
 	if (rc != PLDM_SUCCESS) return rc;
@@ -447,7 +460,7 @@ int handle_platform_get_pdr(struct pldm_header_info *hdr, const void *req_msg, s
 		if ((transfer_offset + resp_cnt) >= record_payload_size) {
 			transfer_flag = PLDM_PLATFORM_TRANSFER_END;
 			returned_next_transfer_handle = 0;
-			transfer_crc = pldm_edac_crc8(record_ptr + 10, record_payload_size);
+			transfer_crc = compute_record_transfer_crc(record_ptr, record_payload_size);
 		} else {
 			/* not the end anymore */
 			transfer_crc = 0;
