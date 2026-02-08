@@ -76,6 +76,19 @@ static void rx_message(uint8_t remote_eid, bool tag_owner, uint8_t msg_tag, void
 		return;
 	}
 
+	LOG_DBG("rx_message: remote_eid=%u tag_owner=%d msg_tag=%u len=%zu", remote_eid, tag_owner, msg_tag, len);
+	if (msg && len) {
+		/* show first up to 16 bytes for quick inspection */
+		size_t show = len > 16 ? 16 : len;
+		char buf[64];
+		size_t p = 0;
+		for (size_t i = 0; i < show; i++) {
+			p += snprintf(&buf[p], sizeof(buf) - p, "%02x%s", ((uint8_t *)msg)[i], (i + 1 < show) ? " " : "");
+			if (p >= sizeof(buf)) break;
+		}
+		LOG_DBG("rx_message bytes: %s", buf);
+	}
+
 	emsg.remote_eid = remote_eid;
 	emsg.tag_owner = !tag_owner; /* reply toggles tag owner */
 	emsg.msg_tag = msg_tag;

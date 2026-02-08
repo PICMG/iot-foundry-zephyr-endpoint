@@ -20,6 +20,7 @@
 #include <libpldm/pdr.h>
 #include <../pldm/src/control-internal.h>
 #include "pdrs/config.h"
+#include "pdrs/pdr_utils.h"
 #include "mctp_control.h"
 #include "platform.h"
 #include <libpldm/edac.h>
@@ -127,26 +128,27 @@ static void find_pdr_record_by_handle(uint32_t want_handle, const uint8_t **rec_
 	*rec_ptr = NULL;
 	*rec_size = 0;
 	*next_handle = 0;
+	/* Interpret builder-provided PDR_TOTAL_SIZE as payload-only. The
+	 * actual repository bytes in __pdr_data[] include a 10-byte header
+	 * per record. Compute the true repo byte length here and use it for
+	 * all bounds checks. */
+	const size_t repo_bytes = pdr_repo_bytes();
 
-	while (offset < PDR_TOTAL_SIZE) {
-		if (offset + 10 > PDR_TOTAL_SIZE) {
-			break; /* malformed */
+	while (offset < repo_bytes) {
+		uint32_t handle_v;
+		size_t record_size_v;
+		if (!pdr_read_record_at(offset, &handle_v, &record_size_v)) {
+			break; /* malformed or out of bounds */
 		}
-		uint32_t handle = (uint32_t)__pdr_data[offset] | ((uint32_t)__pdr_data[offset+1] << 8) | ((uint32_t)__pdr_data[offset+2] << 16) | ((uint32_t)__pdr_data[offset+3] << 24);
-		uint16_t length = (uint16_t)__pdr_data[offset+8] | ((uint16_t)__pdr_data[offset+9] << 8);
-		size_t record_size = (size_t)length + 10; /* header(10) + body length */
-
-		if (offset + record_size > PDR_TOTAL_SIZE) {
-			break; /* malformed */
-		}
-
+		uint32_t handle = handle_v;
+		size_t record_size = record_size_v;
 		if (want_handle == 0) {
 			/* caller wants first record */
 			*rec_ptr = &__pdr_data[offset];
 			*rec_size = record_size;
 			/* determine next handle */
-			if (offset + record_size < PDR_TOTAL_SIZE) {
-				uint32_t nh = (uint32_t)__pdr_data[offset + record_size] | ((uint32_t)__pdr_data[offset + record_size + 1] << 8) | ((uint32_t)__pdr_data[offset + record_size + 2] << 16) | ((uint32_t)__pdr_data[offset + record_size + 3] << 24);
+			uint32_t nh = 0;
+			if (pdr_read_record_at(offset + record_size, &nh, NULL)) {
 				*next_handle = nh;
 			} else {
 				*next_handle = 0;
@@ -157,8 +159,8 @@ static void find_pdr_record_by_handle(uint32_t want_handle, const uint8_t **rec_
 		if (handle == want_handle) {
 			*rec_ptr = &__pdr_data[offset];
 			*rec_size = record_size;
-			if (offset + record_size < PDR_TOTAL_SIZE) {
-				uint32_t nh = (uint32_t)__pdr_data[offset + record_size] | ((uint32_t)__pdr_data[offset + record_size + 1] << 8) | ((uint32_t)__pdr_data[offset + record_size + 2] << 16) | ((uint32_t)__pdr_data[offset + record_size + 3] << 24);
+			uint32_t nh = 0;
+			if (pdr_read_record_at(offset + record_size, &nh, NULL)) {
 				*next_handle = nh;
 			} else {
 				*next_handle = 0;
@@ -191,7 +193,9 @@ int handle_platform_get_pdr_repository_info(struct pldm_header_info *hdr, const 
 	}
 
 	uint32_t record_count = PDR_NUMBER_OF_RECORDS;
-	uint32_t repository_size = PDR_TOTAL_SIZE;
+	/* Builder emits PDR_TOTAL_SIZE as payload-only; return the actual
+	 * repository byte length (payload + per-record headers). */
+	uint32_t repository_size = (uint32_t)pdr_repo_bytes();
 	uint32_t largest_record_size = PDR_MAX_RECORD_SIZE;
 
 	/* encode response. leave update_time/oem_update_time NULL */
@@ -395,6 +399,14 @@ int handle_platform_get_pdr(struct pldm_header_info *hdr, const void *req_msg, s
 		transfer_offset = e->offset;
 		size_t remaining = record_payload_size - transfer_offset;
 		if (resp_cnt > remaining) resp_cnt = (uint16_t)remaining;
+		/* Safety: if resp_cnt becomes zero while there is remaining data,
+		 * make forward progress by returning at least one byte. This
+		 * prevents a stuck transfer where the same handle is returned
+		 * repeatedly with zero-length payload. */
+		if ((resp_cnt == 0) && (remaining > 0)) {
+			LOG_WRN("GetPDR: resp_cnt clamped to zero but %zu bytes remain, returning 1", remaining);
+			resp_cnt = (uint16_t)MIN(remaining, (size_t)1);
+		}
 		if (transfer_offset + resp_cnt >= record_payload_size) {
 			transfer_flag = PLDM_PLATFORM_TRANSFER_END;
 			returned_next_transfer_handle = 0;
@@ -419,8 +431,81 @@ int handle_platform_get_pdr(struct pldm_header_info *hdr, const void *req_msg, s
 	/* compute encoded message size */
 	size_t msg_size = sizeof(struct pldm_msg_hdr) + (sizeof(struct pldm_get_pdr_resp) - 1) + resp_cnt + ((transfer_flag == PLDM_PLATFORM_TRANSFER_END) ? 1 : 0);
 
+	/* Ensure the final unescaped MCTP payload (leading MCTP type byte + encoded PLDM msg)
+	 * fits into the binding MTU. If it doesn't, reduce `resp_cnt` and re-encode until it does.
+	 * This handles off-by-one cases where an END CRC or header layout pushes the packet
+	 * just over the `MCTP_PAYLOAD_MAX` boundary. */
+	while ((1 + msg_size) > MCTP_PAYLOAD_MAX) {
+		if (resp_cnt == 0) {
+			/* cannot make any forward progress */
+			LOG_WRN("GetPDR: cannot fit any payload into MCTP_PAYLOAD_MAX=%u", MCTP_PAYLOAD_MAX);
+			return PLDM_ERROR;
+		}
+		/* shrink returned data by one byte and recompute transfer semantics */
+		resp_cnt--;
+		/* recompute transfer flag / next handle / crc depending on new resp_cnt */
+		if ((transfer_offset + resp_cnt) >= record_payload_size) {
+			transfer_flag = PLDM_PLATFORM_TRANSFER_END;
+			returned_next_transfer_handle = 0;
+			transfer_crc = pldm_edac_crc8(record_ptr + 10, record_payload_size);
+		} else {
+			/* not the end anymore */
+			transfer_crc = 0;
+			if (data_transfer_hndl == 0) {
+				/* new transfer: ensure we have an allocation for continuation */
+				if (returned_next_transfer_handle == 0) {
+					uint32_t h = pdr_xfer_alloc(record_hndl);
+					if (h == 0) return PLDM_ERROR;
+					returned_next_transfer_handle = h;
+				}
+				transfer_flag = PLDM_PLATFORM_TRANSFER_START;
+				struct pdr_xfer_entry *ne = pdr_xfer_find(returned_next_transfer_handle);
+				if (ne) {
+					ne->offset = resp_cnt;
+					ne->expiry_ms = k_uptime_get_32() + 60000u;
+				}
+			} else {
+				/* continuation: keep using the provided handle if available */
+				struct pdr_xfer_entry *e = pdr_xfer_find(data_transfer_hndl);
+				if (e) {
+					returned_next_transfer_handle = e->handle;
+					e->offset = transfer_offset + resp_cnt;
+					e->expiry_ms = k_uptime_get_32() + 60000u;
+				} else {
+					/* allocate a new continuation handle if original entry vanished */
+					uint32_t h = pdr_xfer_alloc(record_hndl);
+					if (h == 0) return PLDM_ERROR;
+					returned_next_transfer_handle = h;
+					struct pdr_xfer_entry *ne = pdr_xfer_find(returned_next_transfer_handle);
+					if (ne) {
+						ne->offset = transfer_offset + resp_cnt;
+						ne->expiry_ms = k_uptime_get_32() + 60000u;
+					}
+				}
+				transfer_flag = PLDM_PLATFORM_TRANSFER_MIDDLE;
+			}
+		}
+
+		/* re-encode with the smaller resp_cnt */
+		memset(msg_buf, 0, sizeof(msg_buf));
+		rc = encode_get_pdr_resp(hdr->instance, PLDM_SUCCESS, next_record_handle, returned_next_transfer_handle, transfer_flag, resp_cnt, record_payload, transfer_crc, msg);
+		if (rc != PLDM_SUCCESS) return rc;
+		msg_size = sizeof(struct pldm_msg_hdr) + (sizeof(struct pldm_get_pdr_resp) - 1) + resp_cnt + ((transfer_flag == PLDM_PLATFORM_TRANSFER_END) ? 1 : 0);
+	}
+
 	if (*resp_len < msg_size) return PLDM_ERROR_INVALID_LENGTH;
 	memcpy(resp, msg, msg_size);
+
+	/* If we allocated a transfer handle for a START fragment, record
+	 * the number of bytes we returned so the next continuation will
+	 * begin after this offset. */
+	if (returned_next_transfer_handle != 0 && transfer_flag == PLDM_PLATFORM_TRANSFER_START) {
+		struct pdr_xfer_entry *e = pdr_xfer_find(returned_next_transfer_handle);
+		if (e) {
+			e->offset = resp_cnt;
+			e->expiry_ms = k_uptime_get_32() + 60000u;
+		}
+	}
 	*resp_len = msg_size;
 	return PLDM_SUCCESS;
 }

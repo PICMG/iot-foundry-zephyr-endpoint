@@ -197,7 +197,7 @@ def send_and_capture(device: str, frame: bytes, baud: int = 9600, settle: float 
         ser.flush()
         data = bytearray()
         last = time.time()
-        deadline = time.time() + 2.0
+        deadline = time.time() + 5.0
         while time.time() < deadline:
             n = ser.in_waiting
             if n:
@@ -215,14 +215,15 @@ def send_and_capture(device: str, frame: bytes, baud: int = 9600, settle: float 
             try:
                 start = data.index(FRAME_CHAR, i)
                 end = data.index(FRAME_CHAR, start + 1)
-            except ValueError:
-                break
+                # append the inner payload bytes (between flags)
                 frames.append(bytes(data[start + 1:end]))
                 # allow RFC1662 "shared flag" semantics: do not advance past the
                 # end-flag so that the same 0x7E byte can serve as the start of
-                # the next frame. Advancing to end would skip that possible start
-                # and mis-align subsequent frames.
+                # the next frame. Keep `i` at `end` to allow the end byte to be
+                # considered the start of the next frame on the following loop.
                 i = end
+            except ValueError:
+                break
 
         if not frames:
             return bytes()

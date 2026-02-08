@@ -14,6 +14,10 @@
 #include "mctp_control.h"
 #include "platform.h"
 
+#include "pdrs/pdr_utils.h"
+
+#include <errno.h>
+
 LOG_MODULE_REGISTER(process_pldm, LOG_LEVEL_DBG);
 
 static struct pldm_pdr *pdr_repo = NULL;
@@ -395,14 +399,17 @@ int init_pldm() {
 
 		// walk through the PDR data and add each record to the repository
 		size_t offset = 0;
-		while (offset < PDR_TOTAL_SIZE) {
-			size_t record_size = __pdr_data[8]+(size_t)(__pdr_data[9]<<8)+10;
+		while (true) {
+			uint32_t rh = 0;
+			size_t record_size = 0;
+			if (!pdr_read_record_at(offset, &rh, &record_size)) break;
 			int rc = pldm_pdr_add(pdr_repo, &__pdr_data[offset], record_size, false, 0x0001, NULL);
 			if (rc != 0) {
 				LOG_ERR("Failed to add PDR record at offset %zu, size %zu: %d", offset, record_size, rc);
 				return rc;
 			}
 			offset += record_size;
+			if (offset >= pdr_repo_bytes()) break;
 		}
 		LOG_INF("PDRs configured successfully");
 	}
@@ -424,6 +431,11 @@ int init_pldm() {
 }
 
 int handle_pldm_message(struct mctp *mctp, uint8_t remote_eid, bool tag_owner, uint8_t msg_tag, const void *msg, size_t msg_len) {    
+	LOG_DBG("handle_pldm_message: remote=%u tag_owner=%d msg_tag=%u msg_len=%zu", remote_eid, tag_owner, msg_tag, msg_len);
+	if (msg && msg_len) {
+		const uint8_t *b = (const uint8_t *)msg;
+		LOG_DBG("handle_pldm_message bytes: %02x %02x %02x %02x", b[0], (msg_len>1?b[1]:0), (msg_len>2?b[2]:0), (msg_len>3?b[3]:0));
+	}
 	/* Get the pldm header */
 	const void *pldm_msg = ((const uint8_t *)msg + 1);  // skip the MCTP ic / type byte (always 1 for PLDM)
 	size_t pldm_msg_len = msg_len - 1;					// reduce by the MCTP type byte
@@ -449,7 +461,13 @@ int handle_pldm_message(struct mctp *mctp, uint8_t remote_eid, bool tag_owner, u
 			if (rc >= 0) {
 				LOG_DBG("TX: mctp_message_tx len=%u buf=%02x %02x %02x %02x %02x %02x",
 				    (unsigned int)(resp_len + 1), pldm_tx_buf[0], pldm_tx_buf[1], pldm_tx_buf[2], pldm_tx_buf[3], pldm_tx_buf[4], pldm_tx_buf[5]);
-				mctp_message_tx(mctp, remote_eid, !tag_owner, msg_tag, pldm_tx_buf, resp_len + 1);
+				/* Defensive: ensure the unescaped payload passed to transport fits the binding MTU */
+				size_t send_len = resp_len + 1;
+				if (send_len > MCTP_PAYLOAD_MAX) {
+					LOG_WRN("Truncating response from %zu to %u to fit MCTP_PAYLOAD_MAX", send_len, MCTP_PAYLOAD_MAX);
+					send_len = MCTP_PAYLOAD_MAX;
+				}
+				mctp_message_tx(mctp, remote_eid, !tag_owner, msg_tag, pldm_tx_buf, send_len);
             	return rc;
 			}
 			break;
@@ -460,7 +478,13 @@ int handle_pldm_message(struct mctp *mctp, uint8_t remote_eid, bool tag_owner, u
 			if (rc >= 0) {
 				LOG_DBG("TX: mctp_message_tx len=%u buf=%02x %02x %02x %02x %02x %02x",
 				    (unsigned int)(resp_len + 1), pldm_tx_buf[0], pldm_tx_buf[1], pldm_tx_buf[2], pldm_tx_buf[3], pldm_tx_buf[4], pldm_tx_buf[5]);
-				mctp_message_tx(mctp, remote_eid, !tag_owner, msg_tag, pldm_tx_buf, resp_len + 1);
+				/* Defensive: ensure the unescaped payload passed to transport fits the binding MTU */
+				size_t send_len = resp_len + 1;
+				if (send_len > MCTP_PAYLOAD_MAX) {
+					LOG_WRN("Truncating response from %zu to %u to fit MCTP_PAYLOAD_MAX", send_len, MCTP_PAYLOAD_MAX);
+					send_len = MCTP_PAYLOAD_MAX;
+				}
+				mctp_message_tx(mctp, remote_eid, !tag_owner, msg_tag, pldm_tx_buf, send_len);
             	return rc;
 			}
 			break;
@@ -471,7 +495,13 @@ int handle_pldm_message(struct mctp *mctp, uint8_t remote_eid, bool tag_owner, u
 			if (rc >= 0) {
 				LOG_DBG("TX: mctp_message_tx len=%u buf=%02x %02x %02x %02x %02x %02x",
 				    (unsigned int)(resp_len + 1), pldm_tx_buf[0], pldm_tx_buf[1], pldm_tx_buf[2], pldm_tx_buf[3], pldm_tx_buf[4], pldm_tx_buf[5]);
-				mctp_message_tx(mctp, remote_eid, !tag_owner, msg_tag, pldm_tx_buf, resp_len + 1);
+				/* Defensive: ensure the unescaped payload passed to transport fits the binding MTU */
+				size_t send_len = resp_len + 1;
+				if (send_len > MCTP_PAYLOAD_MAX) {
+					LOG_WRN("Truncating response from %zu to %u to fit MCTP_PAYLOAD_MAX", send_len, MCTP_PAYLOAD_MAX);
+					send_len = MCTP_PAYLOAD_MAX;
+				}
+				mctp_message_tx(mctp, remote_eid, !tag_owner, msg_tag, pldm_tx_buf, send_len);
             	return rc;
 			}
 			break;

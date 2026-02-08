@@ -117,7 +117,8 @@ def parse_frame(data: bytes):
 def build_mctp_control_request(cmd_code: int, dest: int = 10, src: int = 0x10, payload: bytes = b"") -> bytes:
     protocol_version = 0x01
     header_version = 0x01
-    flags = 0xC8
+    # Flags: SOM (0x80) | EOM (0x40) | Tag-Owner (TO bit at 0x08 per request)
+    flags = (0x80 | 0x40 | 0x08)
     msg_type = 0x00
     instance_id = 0x80
     body = bytearray()
