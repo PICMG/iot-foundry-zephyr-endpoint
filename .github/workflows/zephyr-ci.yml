@@ -65,4 +65,10 @@ jobs:
           cmake ..
           cmake --build . -j
           ./pldm_tb ../tests.json -v
+          # Run native FRU unit tests (no hardware I/O)
+          if [ -x ./test_fru ]; then
+            ./test_fru
+          else
+            echo "test_fru not built or missing"; exit 1
+          fi
           popd
