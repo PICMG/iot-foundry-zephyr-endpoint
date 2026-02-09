@@ -21,7 +21,6 @@
 LOG_MODULE_REGISTER(process_pldm, LOG_LEVEL_DBG);
 
 static struct pldm_pdr *pdr_repo = NULL;
-static struct pldm_pdr *fru_repo = NULL;
 static struct pldm_control pldm_control_ctx;
 
 #ifndef PLDM_RX_BUF_SZ
@@ -412,19 +411,6 @@ int init_pldm() {
 		LOG_INF("PDRs configured successfully");
 	}
 	#endif
-
-	/**
-	 * Set up the FRU Record Table
-	 */
-	if (fru_repo != NULL) {
-        LOG_WRN("FRU repository already configured");
-        return 0;
-    }
-    fru_repo = pldm_pdr_init();
-	if (fru_repo == NULL) {
-		LOG_ERR("Failed to initialize PLDM FRU repository");
-		return -ENOMEM;
-	}
 	return 0;
 }
 
