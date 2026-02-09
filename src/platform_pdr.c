@@ -269,10 +269,6 @@ int handle_platform_get_pdr(struct pldm_header_info *hdr, const void *req_msg, s
 		return rc;
 	}
 
-	/* Log decoded request values for debugging */
-	LOG_DBG("GetPDR req: record_hndl=0x%08x data_xfer_hndl=0x%08x transfer_op_flag=0x%02x request_cnt=%u record_chg_num=%u",
-		record_hndl, data_transfer_hndl, transfer_op_flag, request_cnt, record_chg_num);
-
 	/* Validate transfer operation flag per DSP0248: GetFirstPart=0x01, GetNextPart=0x00
 	 * If data_transfer_hndl == 0 (new transfer) we expect GetFirstPart (0x01).
 	 * If data_transfer_hndl != 0 (continuation) we expect GetNextPart (0x00).
@@ -309,11 +305,7 @@ int handle_platform_get_pdr(struct pldm_header_info *hdr, const void *req_msg, s
 	const uint8_t *record_ptr = NULL;
 	size_t record_size = 0;
 	uint32_t next_record_handle = 0;
-	if (record_hndl == 0) {
-		find_pdr_record_by_handle(0, &record_ptr, &record_size, &next_record_handle);
-	} else {
-		find_pdr_record_by_handle(record_hndl, &record_ptr, &record_size, &next_record_handle);
-	}
+	find_pdr_record_by_handle(record_hndl, &record_ptr, &record_size, &next_record_handle);
 
 	if (!record_ptr || record_size == 0) {
 		PLDM_MSG_BUFFER(msg_buf, MCTP_PAYLOAD_MAX);

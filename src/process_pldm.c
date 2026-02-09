@@ -128,9 +128,7 @@ const bitfield8_t PLDM_PLATFORM_COMMANDS[32] = {
 	/* byte 10: commands 0x50..0x57 */
 	[10] = { .byte = (uint8_t)(
 		(1U << (PLDM_GET_PDR_REPOSITORY_INFO & 7)) |
-		(1U << (PLDM_GET_PDR & 7)) |
-		(1U << (PLDM_FIND_PDR & 7)) |
-		(1U << (PLDM_GET_PDR_REPOSITORY_SIGNATURE & 7))
+		(1U << (PLDM_GET_PDR & 7))
 	) },
 
 	/* byte 11: commands 0x58..0x5f */
@@ -430,12 +428,22 @@ int init_pldm() {
 	return 0;
 }
 
+/***
+ * @brief Handle an incoming PLDM message.
+ * 
+ * This function is the main entry point for processing incoming PLDM messages. It
+ * parses the PLDM header, determines the message type and command, and dispatches
+ * the message to the appropriate handler function.
+ * 
+ * @param mctp Pointer to the MCTP instance.
+ * @param remote_eid The EID of the remote sender.
+ * @param tag_owner Indicates if the message tag is owned by the sender.
+ * @param msg_tag The message tag of the incoming message.
+ * @param msg Pointer to the incoming message buffer.
+ * @param msg_len Length of the incoming message in bytes.
+ * @return 0 on success, non-zero error code on failure.
+ */
 int handle_pldm_message(struct mctp *mctp, uint8_t remote_eid, bool tag_owner, uint8_t msg_tag, const void *msg, size_t msg_len) {    
-	LOG_DBG("handle_pldm_message: remote=%u tag_owner=%d msg_tag=%u msg_len=%zu", remote_eid, tag_owner, msg_tag, msg_len);
-	if (msg && msg_len) {
-		const uint8_t *b = (const uint8_t *)msg;
-		LOG_DBG("handle_pldm_message bytes: %02x %02x %02x %02x", b[0], (msg_len>1?b[1]:0), (msg_len>2?b[2]:0), (msg_len>3?b[3]:0));
-	}
 	/* Get the pldm header */
 	const void *pldm_msg = ((const uint8_t *)msg + 1);  // skip the MCTP ic / type byte (always 1 for PLDM)
 	size_t pldm_msg_len = msg_len - 1;					// reduce by the MCTP type byte
@@ -459,8 +467,6 @@ int handle_pldm_message(struct mctp *mctp, uint8_t remote_eid, bool tag_owner, u
 			// fix issue with wrong type byte
 			pldm_tx_buf[2] = hdr.pldm_type;   // copy the type from the request
 			if (rc >= 0) {
-				LOG_DBG("TX: mctp_message_tx len=%u buf=%02x %02x %02x %02x %02x %02x",
-				    (unsigned int)(resp_len + 1), pldm_tx_buf[0], pldm_tx_buf[1], pldm_tx_buf[2], pldm_tx_buf[3], pldm_tx_buf[4], pldm_tx_buf[5]);
 				/* Defensive: ensure the unescaped payload passed to transport fits the binding MTU */
 				size_t send_len = resp_len + 1;
 				if (send_len > MCTP_PAYLOAD_MAX) {
@@ -476,8 +482,7 @@ int handle_pldm_message(struct mctp *mctp, uint8_t remote_eid, bool tag_owner, u
 			// fix issue with wrong type byte
 			pldm_tx_buf[2] = hdr.pldm_type;   // copy the type from the request
 			if (rc >= 0) {
-				LOG_DBG("TX: mctp_message_tx len=%u buf=%02x %02x %02x %02x %02x %02x",
-				    (unsigned int)(resp_len + 1), pldm_tx_buf[0], pldm_tx_buf[1], pldm_tx_buf[2], pldm_tx_buf[3], pldm_tx_buf[4], pldm_tx_buf[5]);
+				/* suppressed per-message TX debug logging */
 				/* Defensive: ensure the unescaped payload passed to transport fits the binding MTU */
 				size_t send_len = resp_len + 1;
 				if (send_len > MCTP_PAYLOAD_MAX) {
@@ -493,8 +498,6 @@ int handle_pldm_message(struct mctp *mctp, uint8_t remote_eid, bool tag_owner, u
 			// fix issue with wrong type byte
 			pldm_tx_buf[2] = hdr.pldm_type;   // copy the type from the request
 			if (rc >= 0) {
-				LOG_DBG("TX: mctp_message_tx len=%u buf=%02x %02x %02x %02x %02x %02x",
-				    (unsigned int)(resp_len + 1), pldm_tx_buf[0], pldm_tx_buf[1], pldm_tx_buf[2], pldm_tx_buf[3], pldm_tx_buf[4], pldm_tx_buf[5]);
 				/* Defensive: ensure the unescaped payload passed to transport fits the binding MTU */
 				size_t send_len = resp_len + 1;
 				if (send_len > MCTP_PAYLOAD_MAX) {
@@ -509,7 +512,6 @@ int handle_pldm_message(struct mctp *mctp, uint8_t remote_eid, bool tag_owner, u
             LOG_DBG("Unsupported PLDM message type: %u", hdr.pldm_type);
     }
 
-	LOG_DBG("Sending Error Response: %u", rc);
 	/* Build the PLDM response header using the libpldm helper to avoid
 	 * manual bit-twiddling and ensure correct request/tag polarity. */
 	pldm_tx_buf[0] = MCTP_PLDM_HDR_MSG_TYPE; /* MCTP PLDM type byte */
@@ -532,9 +534,7 @@ int handle_pldm_message(struct mctp *mctp, uint8_t remote_eid, bool tag_owner, u
 
 		/* total bytes: MCTP type + PLDM header + completion_code */
 		size_t total_len = 1 + hdr_sz + 1;
-			LOG_DBG("TX: mctp_message_tx len=%u buf=%02x %02x %02x %02x %02x %02x",
-			    (unsigned int)total_len, pldm_tx_buf[0], pldm_tx_buf[1], pldm_tx_buf[2], pldm_tx_buf[3], pldm_tx_buf[4], pldm_tx_buf[5]);
-			mctp_message_tx(mctp, remote_eid, !tag_owner, msg_tag, pldm_tx_buf, total_len);
+		mctp_message_tx(mctp, remote_eid, !tag_owner, msg_tag, pldm_tx_buf, total_len);
 	}
 	return rc;
 }
