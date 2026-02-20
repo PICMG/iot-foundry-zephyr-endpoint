@@ -95,11 +95,18 @@ To build the project, use the following commands:
 cd <workspace_path>
 west build -p always -b arduino_nano_33_iot <application_path>
 # our use this to enable pldm:
-west build -p always -b arduino_nano_33_iot -d /home/doug/zephyrproject/build /home/doug/git/iot-foundry-zephyr-endpoint -- -DINCLUDE_PLDM=ON
+west build -p always -b arduino_nano_33_iot -d /home/doug/zephyrproject/build_atmega /home/doug/git/iot-foundry-zephyr-endpoint -- -DINCLUDE_PLDM=ON
+
+# or this for the nordic 54l15dk developer board
+west build -p always -b nrf54l15dk/nrf54l15/cpuapp -d /home/doug/zephyrproject/build_nordic /home/doug/git/iot-foundry-zephyr-endpoint -- -DINCLUDE_PLDM=ON
+
 ```
 The device can be programmed using:
 ```bash
-west flash
+# for atmega - note that the atmega will communicate on the pin-based serial port
+west flash -d build_atmega
+# for nordic - note that the nordic board will communicate on /dev/ttyACM0 after programming
+west flash -d build_nordic
 ```
 
 ## Running device tests
