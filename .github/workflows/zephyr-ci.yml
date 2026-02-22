@@ -25,7 +25,7 @@ jobs:
       - name: Install west and update PATH
         run: |
           python3 -m pip install --user west
-          echo "::add-path::$HOME/.local/bin"
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
           export PATH="$HOME/.local/bin:$PATH"
 
       - name: Initialize west workspace with Zephyr
