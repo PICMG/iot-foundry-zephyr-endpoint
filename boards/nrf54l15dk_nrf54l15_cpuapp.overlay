@@ -1,6 +1,3 @@
-/ {
-    mctp_serial: uart20 = &uart21;
-};
 
 arduino_serial: &uart20 {
     current-speed = <115200>;

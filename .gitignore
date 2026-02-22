@@ -11,8 +11,7 @@ __pycache__/
 /build*
 
 # platform-specific pdr files
-/src/pdrs/*
-!/src/pdrs/platform_defs.h
+/src/pdrs/config.*
 
 # docs
 /doc/_build*

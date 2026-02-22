@@ -80,12 +80,8 @@ chmod +x <application_path>/patches/apply_patches.sh
 ```
 The environment is now installed and ready to use.  Note that sourcing the virtual environment will be required with each new terminal session.
 
-Lastly, if building with PLDM support enabled, you may use the iot-builder to create build switches and PDR data for your project.  This code will place the required config.c and config.h files in the src/pdrs/ folder.  You may change the path to the input.json file as you see fit. 
-```bash
-cd <application_path>
-./build-host/iot_builder/iot_builder ./tools/iot_builder/src/builder/sample_config.json ./src/pdrs/
+Lastly, if building with PLDM support enabled, the iot-builder will be used to create build switches and PDR data for your project.  This code will place the required config.c and config.h files in the src/pdrs/ folder.  The name of the input file the builder will use will match the name of your board configuration (but have an extension of .json) and can be found in the boards/ folder. 
 
-```
 More information about the iot builder can be found on github at: https://github.com/PICMG/iot_builder
 
 ## Build Flow

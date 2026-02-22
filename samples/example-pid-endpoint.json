@@ -1,0 +1,488 @@
+{
+  "device": "STM32F7-PID-Controller",
+  "pins": ["PA0", "PA1", "PA2", "PA3", "PA4", "PB0", "PB1", "PC0"],
+  "channels": [
+    {
+      "name": "DI_Interlock",
+      "type": "digital_in",
+      "description": "Global Interlock Input",
+      "maxValueAtPin": 3.3,
+      "minValueAtPin": 0.0,
+      "precision": 0,
+      "accuracy": 0.0,
+      "pins": [{ "name": "PA0", "function": "Digital Input" }]
+    },
+    {
+      "name": "DI_Trigger",
+      "type": "digital_in",
+      "description": "Trigger Input",
+      "maxValueAtPin": 3.3,
+      "minValueAtPin": 0.0,
+      "precision": 0,
+      "accuracy": 0.0,
+      "pins": [{ "name": "PA1", "function": "Digital Input" }]
+    },
+    {
+      "name": "AI_Feedback",
+      "type": "analog_in",
+      "description": "PID Feedback Signal",
+      "maxValueAtPin": 3.3,
+      "minValueAtPin": 0.0,
+      "precision": 16,
+      "accuracy": 0.1,
+      "pins": [{ "name": "PA2", "function": "ADC Input" }]
+    },
+    {
+      "name": "DO_Interlock",
+      "type": "digital_out",
+      "description": "Global Interlock Output",
+      "maxValueAtPin": 3.3,
+      "minValueAtPin": 0.0,
+      "precision": 0,
+      "accuracy": 0.0,
+      "pins": [{ "name": "PB0", "function": "Digital Output" }]
+    },
+    {
+      "name": "DO_Trigger",
+      "type": "digital_out",
+      "description": "Trigger Output",
+      "maxValueAtPin": 3.3,
+      "minValueAtPin": 0.0,
+      "precision": 0,
+      "accuracy": 0.0,
+      "pins": [{ "name": "PB1", "function": "Digital Output" }]
+    },
+    {
+      "name": "AO_Control",
+      "type": "analog_out",
+      "description": "PID Control Output",
+      "maxValueAtPin": 10.0,
+      "minValueAtPin": 0.0,
+      "precision": 16,
+      "accuracy": 0.2,
+      "pins": [{ "name": "PC0", "function": "DAC Output" }]
+    }
+  ],
+  "maxFruBytes": 1024,
+  "fruRecords": [
+    {
+      "vendorIANA": 412,
+      "required": true,
+      "description": "Device FRU",
+      "fields": [
+        {
+          "type": 5,
+          "required": true,
+          "description": "Manufacturer",
+          "format": "string",
+          "length": null,
+          "value": "Industrial Controls Inc."
+        },
+        {
+          "type": 2,
+          "required": true,
+          "description": "Model",
+          "format": "string",
+          "length": null,
+          "value": "PID Controller Module"
+        },
+        {
+          "type": 3,
+          "required": true,
+          "description": "Part Number",
+          "format": "string",
+          "length": null,
+          "value": "PID-CTL-100"
+        },
+        {
+          "type": 4,
+          "required": true,
+          "description": "Serial Number",
+          "format": "string",
+          "length": null,
+          "value": "PID-2024-001"
+        },
+        {
+          "type": 10,
+          "required": false,
+          "description": "Version",
+          "format": "string",
+          "length": null,
+          "value": "v2.1"
+        }
+      ]
+    }
+  ],
+  "logicalEntities": [
+    {
+      "entityVendorIANA": 12634,
+      "vendorEntityID": 2,
+      "name": "PID",
+      "required": true,
+      "description": "PID Controller Endpoint",
+      "ioBindings": [
+        {
+          "bindingType": "stateSensor",
+          "name": "GlobalInterlockSensor",
+          "includeInPdr": true,
+          "required": true,
+          "description": null,
+          "isVirtual": false,
+          "sensorID": 1,
+          "allowedInterfaceTypes": ["digital_in"],
+          "boundChannel": "DI_Interlock",
+          "stateSetVendorIANA": 412,
+          "stateSet": 96,
+          "possibleStates": 3,
+          "stateWhenHigh": 1,
+          "stateWhenLow": 2,
+          "defaultState": null
+        },
+        {
+          "bindingType": "stateEffecter",
+          "name": "GlobalInterlockEffecter",
+          "includeInPdr": true,
+          "required": true,
+          "description": null,
+          "isVirtual": false,
+          "effecterID": 1,
+          "allowedInterfaceTypes": ["digital_out"],
+          "boundChannel": "DO_Interlock",
+          "stateSetVendorIANA": 412,
+          "stateSet": 96,
+          "possibleStates": 3,
+          "stateWhenHigh": 1,
+          "stateWhenLow": 2,
+          "defaultState": 2
+        },
+        {
+          "bindingType": "stateSensor",
+          "name": "TriggerSensor",
+          "includeInPdr": true,
+          "required": true,
+          "description": null,
+          "isVirtual": false,
+          "sensorID": 2,
+          "allowedInterfaceTypes": ["digital_in"],
+          "boundChannel": "DI_Trigger",
+          "stateSetVendorIANA": 12634,
+          "stateSet": 24576,
+          "possibleStates": 3,
+          "stateWhenHigh": 1,
+          "stateWhenLow": 2,
+          "defaultState": null
+        },
+        {
+          "bindingType": "stateEffecter",
+          "name": "TriggerEffecter",
+          "includeInPdr": true,
+          "required": true,
+          "description": null,
+          "isVirtual": false,
+          "effecterID": 2,
+          "allowedInterfaceTypes": ["digital_out"],
+          "boundChannel": "DO_Trigger",
+          "stateSetVendorIANA": 12634,
+          "stateSet": 24576,
+          "possibleStates": 3,
+          "stateWhenHigh": 1,
+          "stateWhenLow": 2,
+          "defaultState": 2
+        },
+        {
+          "bindingType": "numericSensor",
+          "name": "Feedback",
+          "includeInPdr": false,
+          "required": true,
+          "description": "PID feedback sensor",
+          "isVirtual": false,
+          "sensorID": 5,
+          "allowedInterfaceTypes": ["analog_in"],
+          "boundChannel": "AI_Feedback",
+          "sensor": null,
+          "inputCurve": [
+            { "in": 0.0, "out": 0.0 },
+            { "in": 100.0, "out": 3.3 }
+          ],
+          "inputGearingRatio": 1.0,
+          "physicalBaseUnit": 2,
+          "physicalUnitModifier": 0,
+          "physicalRateUnit": 0,
+          "physicalAuxUnit": 0,
+          "physicalAuxUnitModifier": 0,
+          "physicalAuxRateUnit": 0,
+          "rel": null,
+          "normalMax": null,
+          "normalMin": null,
+          "upperThresholdWarning": null,
+          "upperThresholdCritical": 90.0,
+          "upperThresholdFatal": 100.0,
+          "lowerThresholdWarning": null,
+          "lowerThresholdCritical": null,
+          "lowerThresholdFatal": null
+        },
+        {
+          "bindingType": "numericEffecter",
+          "name": "OutputEffecter",
+          "includeInPdr": false,
+          "required": true,
+          "description": "PID output effecter",
+          "isVirtual": false,
+          "effecterID": null,
+          "allowedInterfaceTypes": ["analog_out"],
+          "boundChannel": "AO_Control",
+          "effecter": null,
+          "outputCurve": [
+            { "in": 0.0, "out": 0.0 },
+            { "in": 10.0, "out": 100.0 }
+          ],
+          "outputGearingRatio": 1.0,
+          "physicalBaseUnit": 19,
+          "physicalUnitModifier": 0,
+          "physicalRateUnit": 0,
+          "physicalAuxUnit": 0,
+          "physicalAuxUnitModifier": 0,
+          "physicalAuxRateUnit": 0,
+          "rel": null,
+          "physicalDefaultValue": 0.0
+        },
+        {
+          "bindingType": "stateEffecter",
+          "name": "Command",
+          "includeInPdr": true,
+          "required": true,
+          "description": "PID command effecter",
+          "isVirtual": true,
+          "effecterID": 3,
+          "allowedInterfaceTypes": [],
+          "boundChannel": null,
+          "stateSetVendorIANA": 12634,
+          "stateSet": 24578,
+          "possibleStates": 3,
+          "stateWhenHigh": null,
+          "stateWhenLow": null,
+          "defaultState": 2
+        },
+        {
+          "bindingType": "stateSensor",
+          "name": "OperationalState",
+          "includeInPdr": true,
+          "required": true,
+          "description": "PID operational state sensor",
+          "isVirtual": true,
+          "sensorID": 3,
+          "allowedInterfaceTypes": [],
+          "boundChannel": null,
+          "stateSetVendorIANA": 12634,
+          "stateSet": 24577,
+          "possibleStates": 15,
+          "stateWhenHigh": null,
+          "stateWhenLow": null,
+          "defaultState": null
+        },
+        {
+          "bindingType": "numericEffecter",
+          "name": "ProportionalGain",
+          "includeInPdr": true,
+          "required": true,
+          "description": "Proportional gain",
+          "isVirtual": true,
+          "effecterID": 5,
+          "allowedInterfaceTypes": [],
+          "boundChannel": null,
+          "effecter": null,
+          "outputCurve": null,
+          "outputGearingRatio": null,
+          "physicalBaseUnit": 0,
+          "physicalUnitModifier": 0,
+          "physicalRateUnit": 0,
+          "physicalAuxUnit": 0,
+          "physicalAuxUnitModifier": 0,
+          "physicalAuxRateUnit": 0,
+          "rel": null,
+          "physicalDefaultValue": 1.0
+        },
+        {
+          "bindingType": "numericEffecter",
+          "name": "IntegralGain",
+          "includeInPdr": true,
+          "required": true,
+          "description": "Integral gain",
+          "isVirtual": true,
+          "effecterID": 6,
+          "allowedInterfaceTypes": [],
+          "boundChannel": null,
+          "effecter": null,
+          "outputCurve": null,
+          "outputGearingRatio": null,
+          "physicalBaseUnit": 0,
+          "physicalUnitModifier": 0,
+          "physicalRateUnit": 0,
+          "physicalAuxUnit": 0,
+          "physicalAuxUnitModifier": 0,
+          "physicalAuxRateUnit": 0,
+          "rel": null,
+          "physicalDefaultValue": 0.1
+        },
+        {
+          "bindingType": "numericEffecter",
+          "name": "DifferentialGain",
+          "includeInPdr": true,
+          "required": true,
+          "description": "Differential gain",
+          "isVirtual": true,
+          "effecterID": 7,
+          "allowedInterfaceTypes": [],
+          "boundChannel": null,
+          "effecter": null,
+          "outputCurve": null,
+          "outputGearingRatio": null,
+          "physicalBaseUnit": 0,
+          "physicalUnitModifier": 0,
+          "physicalRateUnit": 0,
+          "physicalAuxUnit": 0,
+          "physicalAuxUnitModifier": 0,
+          "physicalAuxRateUnit": 0,
+          "rel": null,
+          "physicalDefaultValue": 0.05
+        },
+        {
+          "bindingType": "numericEffecter",
+          "name": "Setpoint",
+          "includeInPdr": true,
+          "required": true,
+          "description": "PID setpoint",
+          "isVirtual": true,
+          "effecterID": 4,
+          "allowedInterfaceTypes": [],
+          "boundChannel": null,
+          "effecter": null,
+          "outputCurve": null,
+          "outputGearingRatio": null,
+          "physicalBaseUnit": 2,
+          "physicalUnitModifier": 0,
+          "physicalRateUnit": 0,
+          "physicalAuxUnit": 0,
+          "physicalAuxUnitModifier": 0,
+          "physicalAuxRateUnit": 0,
+          "rel": null,
+          "physicalDefaultValue": 50.0
+        },
+        {
+          "bindingType": "numericSensor",
+          "name": "Error",
+          "includeInPdr": true,
+          "required": false,
+          "description": "PID error sensor",
+          "isVirtual": true,
+          "sensorID": 4,
+          "allowedInterfaceTypes": [],
+          "boundChannel": null,
+          "sensor": null,
+          "inputCurve": null,
+          "inputGearingRatio": null,
+          "physicalBaseUnit": 2,
+          "physicalUnitModifier": 0,
+          "physicalRateUnit": 0,
+          "physicalAuxUnit": 0,
+          "physicalAuxUnitModifier": 0,
+          "physicalAuxRateUnit": 0,
+          "rel": null,
+          "normalMax": 5.0,
+          "normalMin": -5.0,
+          "upperThresholdWarning": null,
+          "upperThresholdCritical": 10.0,
+          "upperThresholdFatal": 20.0,
+          "lowerThresholdWarning": null,
+          "lowerThresholdCritical": -10.0,
+          "lowerThresholdFatal": -20.0
+        }
+      ],
+      "parameters": [
+        {
+          "parameterType": "real",
+          "name": "SampleRate",
+          "description": "PID controller sample rate in Hz",
+          "value": 100.0,
+          "defaultValue": 100.0,
+          "maxValue": 1000.0,
+          "minValue": 1.0
+        }
+      ]
+    }
+  ],
+  "oemStateSets": [
+    {
+      "name": "Trigger State Set",
+      "vendorName": "PICMG",
+      "vendorIANA": 12634,
+      "stateSetID": 24576,
+      "oemStateValueRecords": [
+        {
+          "minStateValue": 1,
+          "maxStateValue": 1,
+          "languageTags": ["en"],
+          "stateName": ["Trigger Activated"]
+        },
+        {
+          "minStateValue": 2,
+          "maxStateValue": 2,
+          "languageTags": ["en"],
+          "stateName": ["Trigger Deactivated"]
+        }
+      ]
+    },
+    {
+      "name": "PID Controller State Set",
+      "vendorName": "PICMG",
+      "vendorIANA": 12634,
+      "stateSetID": 24577,
+      "oemStateValueRecords": [
+        {
+          "minStateValue": 1,
+          "maxStateValue": 1,
+          "languageTags": ["en"],
+          "stateName": ["Idle"]
+        },
+        {
+          "minStateValue": 2,
+          "maxStateValue": 2,
+          "languageTags": ["en"],
+          "stateName": ["ConditionStop"]
+        },
+        {
+          "minStateValue": 3,
+          "maxStateValue": 3,
+          "languageTags": ["en"],
+          "stateName": ["ErrorStop"]
+        },
+        {
+          "minStateValue": 4,
+          "maxStateValue": 4,
+          "languageTags": ["en"],
+          "stateName": ["Running"]
+        }
+      ]
+    },
+    {
+      "name": "PID Controller Command State Set",
+      "vendorName": "PICMG",
+      "vendorIANA": 12634,
+      "stateSetID": 24578,
+      "oemStateValueRecords": [
+        {
+          "minStateValue": 1,
+          "maxStateValue": 1,
+          "languageTags": ["en"],
+          "stateName": ["Start"]
+        },
+        {
+          "minStateValue": 2,
+          "maxStateValue": 2,
+          "languageTags": ["en"],
+          "stateName": ["Stop"]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,297 @@
+{
+  "device": "STM32F4-Discovery",
+  "pins": ["PA0", "PA1", "PA2", "PA3", "PB0", "PB1", "PC0", "PC1"],
+  "channels": [
+    {
+      "name": "DI1",
+      "type": "digital_in",
+      "description": "Digital input 1 - Global Interlock",
+      "maxValueAtPin": 3.3,
+      "minValueAtPin": 0.0,
+      "precision": 0,
+      "accuracy": 0.0,
+      "pins": [
+        {
+          "name": "PA0",
+          "function": "Digital Input"
+        }
+      ]
+    },
+    {
+      "name": "DI2",
+      "type": "digital_in",
+      "description": "Digital input 2 - Trigger",
+      "maxValueAtPin": 3.3,
+      "minValueAtPin": 0.0,
+      "precision": 0,
+      "accuracy": 0.0,
+      "pins": [
+        {
+          "name": "PA1",
+          "function": "Digital Input"
+        }
+      ]
+    },
+    {
+      "name": "AI1",
+      "type": "analog_in",
+      "description": "Analog input 1 - Temperature sensor",
+      "maxValueAtPin": 3.3,
+      "minValueAtPin": 0.0,
+      "precision": 12,
+      "accuracy": 0.5,
+      "pins": [
+        {
+          "name": "PA2",
+          "function": "ADC Input"
+        }
+      ]
+    },
+    {
+      "name": "DO1",
+      "type": "digital_out",
+      "description": "Digital output 1 - Global Interlock",
+      "maxValueAtPin": 3.3,
+      "minValueAtPin": 0.0,
+      "precision": 0,
+      "accuracy": 0.0,
+      "pins": [
+        {
+          "name": "PB0",
+          "function": "Digital Output"
+        }
+      ]
+    },
+    {
+      "name": "DO2",
+      "type": "digital_out",
+      "description": "Digital output 2 - Trigger",
+      "maxValueAtPin": 3.3,
+      "minValueAtPin": 0.0,
+      "precision": 0,
+      "accuracy": 0.0,
+      "pins": [
+        {
+          "name": "PB1",
+          "function": "Digital Output"
+        }
+      ]
+    },
+    {
+      "name": "AO1",
+      "type": "analog_out",
+      "description": "Analog output 1 - Control signal",
+      "maxValueAtPin": 3.3,
+      "minValueAtPin": 0.0,
+      "precision": 12,
+      "accuracy": 1.0,
+      "pins": [
+        {
+          "name": "PC0",
+          "function": "DAC Output"
+        }
+      ]
+    }
+  ],
+  "maxFruBytes": 512,
+  "fruRecords": [
+    {
+      "vendorIANA": 412,
+      "required": true,
+      "description": "Device identification record",
+      "fields": [
+        {
+          "type": 5,
+          "required": true,
+          "description": "Manufacturer",
+          "format": "string",
+          "length": null,
+          "value": "Example Manufacturer"
+        },
+        {
+          "type": 2,
+          "required": true,
+          "description": "Model",
+          "format": "string",
+          "length": null,
+          "value": "Simple Sensor/Effecter Board"
+        },
+        {
+          "type": 3,
+          "required": true,
+          "description": "Part Number",
+          "format": "string",
+          "length": null,
+          "value": "SSE-001"
+        },
+        {
+          "type": 4,
+          "required": true,
+          "description": "Serial Number",
+          "format": "string",
+          "length": null,
+          "value": "SN12345678"
+        }
+      ]
+    }
+  ],
+  "logicalEntities": [
+    {
+      "entityVendorIANA": 12634,
+      "vendorEntityID": 1,
+      "name": "Simple",
+      "required": true,
+      "description": "Simple sensor/effecter endpoint",
+      "ioBindings": [
+        {
+          "bindingType": "stateSensor",
+          "name": "GlobalInterlockSensor",
+          "includeInPdr": true,
+          "required": true,
+          "description": "Global interlock sensor",
+          "isVirtual": false,
+          "sensorID": 1,
+          "allowedInterfaceTypes": ["digital_in"],
+          "boundChannel": "DI1",
+          "stateSetVendorIANA": 412,
+          "stateSet": 96,
+          "possibleStates": 3,
+          "stateWhenHigh": 1,
+          "stateWhenLow": 2,
+          "defaultState": null
+        },
+        {
+          "bindingType": "stateEffecter",
+          "name": "GlobalInterlockEffecter",
+          "includeInPdr": true,
+          "required": true,
+          "description": "Global interlock effecter",
+          "isVirtual": false,
+          "effecterID": 1,
+          "allowedInterfaceTypes": ["digital_out"],
+          "boundChannel": "DO1",
+          "stateSetVendorIANA": 412,
+          "stateSet": 96,
+          "possibleStates": 3,
+          "stateWhenHigh": 1,
+          "stateWhenLow": 2,
+          "defaultState": 2
+        },
+        {
+          "bindingType": "stateSensor",
+          "name": "TriggerSensor",
+          "includeInPdr": true,
+          "required": true,
+          "description": "Trigger sensor",
+          "isVirtual": false,
+          "sensorID": 2,
+          "allowedInterfaceTypes": ["digital_in"],
+          "boundChannel": "DI2",
+          "stateSetVendorIANA": 12634,
+          "stateSet": 24576,
+          "possibleStates": 3,
+          "stateWhenHigh": 1,
+          "stateWhenLow": 2,
+          "defaultState": null
+        },
+        {
+          "bindingType": "stateEffecter",
+          "name": "TriggerEffecter",
+          "includeInPdr": true,
+          "required": true,
+          "description": "Trigger effecter",
+          "isVirtual": false,
+          "effecterID": 2,
+          "allowedInterfaceTypes": ["digital_out"],
+          "boundChannel": "DO2",
+          "stateSetVendorIANA": 12634,
+          "stateSet": 24576,
+          "possibleStates": 3,
+          "stateWhenHigh": 1,
+          "stateWhenLow": 2,
+          "defaultState": 2
+        },
+        {
+          "bindingType": "numericSensor",
+          "name": "Sensor3",
+          "includeInPdr": true,
+          "required": false,
+          "description": "Temperature sensor",
+          "isVirtual": false,
+          "sensorID": 3,
+          "allowedInterfaceTypes": ["analog_in"],
+          "boundChannel": "AI1",
+          "sensor": null,
+          "inputCurve": [
+            { "in": 0.0, "out": 0.0 },
+            { "in": 100.0, "out": 3.3 }
+          ],
+          "inputGearingRatio": 1.0,
+          "physicalBaseUnit": 2,
+          "physicalUnitModifier": 0,
+          "physicalRateUnit": 0,
+          "physicalAuxUnit": 0,
+          "physicalAuxUnitModifier": 0,
+          "physicalAuxRateUnit": 0,
+          "rel": null,
+          "normalMax": 80.0,
+          "normalMin": -20.0,
+          "upperThresholdWarning": 75.0,
+          "upperThresholdCritical": 85.0,
+          "upperThresholdFatal": 95.0,
+          "lowerThresholdWarning": null,
+          "lowerThresholdCritical": null,
+          "lowerThresholdFatal": null
+        },
+        {
+          "bindingType": "numericEffecter",
+          "name": "Effecter3",
+          "includeInPdr": true,
+          "required": false,
+          "description": "Control output",
+          "isVirtual": false,
+          "effecterID": 3,
+          "allowedInterfaceTypes": ["analog_out"],
+          "boundChannel": "AO1",
+          "effecter": null,
+          "outputCurve": [
+            { "in": 0.0, "out": 0.0 },
+            { "in": 3.3, "out": 100.0 }
+          ],
+          "outputGearingRatio": 1.0,
+          "physicalBaseUnit": 19,
+          "physicalUnitModifier": 0,
+          "physicalRateUnit": 0,
+          "physicalAuxUnit": 0,
+          "physicalAuxUnitModifier": 0,
+          "physicalAuxRateUnit": 0,
+          "rel": null,
+          "physicalDefaultValue": 0.0
+        }
+      ],
+      "parameters": []
+    }
+  ],
+  "oemStateSets": [
+    {
+      "name": "Trigger State Set",
+      "vendorName": "PICMG",
+      "vendorIANA": 12634,
+      "stateSetID": 24576,
+      "oemStateValueRecords": [
+        {
+          "minStateValue": 1,
+          "maxStateValue": 1,
+          "languageTags": ["en"],
+          "stateName": ["Trigger Activated"]
+        },
+        {
+          "minStateValue": 2,
+          "maxStateValue": 2,
+          "languageTags": ["en"],
+          "stateName": ["Trigger Deactivated"]
+        }
+      ]
+    }
+  ]
+}
