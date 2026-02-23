@@ -92,6 +92,23 @@ jobs:
           cd $GITHUB_WORKSPACE || true
           west list -v || west list || true
 
+      - name: Search Zephyr checkout for "zero"
+        run: |
+          echo "=== Searching Zephyr for 'zero' occurrences ==="
+          ZEPHYR="$HOME/zephyrproject/zephyr"
+          if [ -d "$ZEPHYR" ]; then
+            grep -RIn --line-number "zero" "$ZEPHYR" | head -n 200 || true
+            echo "--- Files with 'zero' (showing context) ---"
+            grep -RIn --line-number "zero" "$ZEPHYR" | awk -F: '{print $1":"$2}' | sort -u | while read f; do
+              file=$(echo "$f" | cut -d: -f1)
+              ln=$(echo "$f" | cut -d: -f2)
+              echo "--- $file:$ln ---"
+              sed -n "$((ln-3)),$((ln+3))p" "$file" || true
+            done
+          else
+            echo "Zephyr checkout not present at $ZEPHYR"
+          fi
+
       - name: Install Python requirements for Zephyr
         run: |
           export ZEPHYR_BASE=$HOME/zephyrproject/zephyr
