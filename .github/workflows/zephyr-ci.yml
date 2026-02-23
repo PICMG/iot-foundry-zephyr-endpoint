@@ -81,6 +81,17 @@ jobs:
           echo "=== Searching manifests for project named 'zero' ==="
           grep -R "name: zero" "$WK" || true
 
+      - name: List west manifest projects
+        run: |
+          echo "=== west list -v (workspace) ==="
+          export PATH="$HOME/.local/bin:$PATH"
+          cd $HOME/zephyrproject || true
+          which west || true
+          west list -v || west list || true
+          echo "=== west list -v (repo) ==="
+          cd $GITHUB_WORKSPACE || true
+          west list -v || west list || true
+
       - name: Install Python requirements for Zephyr
         run: |
           export ZEPHYR_BASE=$HOME/zephyrproject/zephyr
