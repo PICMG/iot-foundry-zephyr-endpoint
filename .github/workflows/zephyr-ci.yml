@@ -35,6 +35,21 @@ jobs:
           west init -m https://github.com/zephyrproject-rtos/zephyr
           west update
 
+      - name: Debug west and environment
+        run: |
+          echo "=== ENV ==="
+          env | grep -E 'HOME|PATH|ZEPHYR_BASE|GITHUB_PATH|RUNNER|USER' || true
+          echo "=== GITHUB_PATH ==="
+          cat "$GITHUB_PATH" || true
+          echo "=== which west ==="
+          which west || true
+          echo "=== west version ==="
+          west --version || true
+          echo "=== west -vv status ==="
+          west -vv status || true
+          echo "=== Zephyr checkout listing ==="
+          ls -la "$HOME/zephyrproject/zephyr" || ls -la /zephyrproject || true
+
       - name: Install Python requirements for Zephyr
         run: |
           export ZEPHYR_BASE=$HOME/zephyrproject/zephyr
