@@ -67,6 +67,20 @@ jobs:
           echo "=== Re-running west -vv update ==="
           west -vv update || true
 
+      - name: Per-project git diagnostics
+        run: |
+          echo "=== Locating initialized project repos under workspace ==="
+          WK="$GITHUB_WORKSPACE"
+          find "$WK" -type d -name .git -printf '%h\n' 2>/dev/null | sort -u | while read repo; do
+            echo "---- $repo ----"
+            git -C "$repo" show-ref --tags --heads || true
+            git -C "$repo" rev-parse --verify manifest-rev 2>/dev/null || echo "no manifest-rev"
+            git -C "$repo" rev-parse --verify HEAD || true
+            git -C "$repo" log -1 --pretty=oneline || true
+          done
+          echo "=== Searching manifests for project named 'zero' ==="
+          grep -R "name: zero" "$WK" || true
+
       - name: Install Python requirements for Zephyr
         run: |
           export ZEPHYR_BASE=$HOME/zephyrproject/zephyr
