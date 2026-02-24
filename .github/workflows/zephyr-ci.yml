@@ -29,7 +29,9 @@ jobs:
           sudo apt-get install -y --no-install-recommends \
             git cmake ninja-build gperf ccache dfu-util device-tree-compiler \
             python3-pip python3-setuptools python3-venv build-essential \
-            gcc-arm-none-eabi binutils-arm-none-eabi
+            gcc-arm-none-eabi binutils-arm-none-eabi libc6-dev \
+            xz-utils unzip pkg-config libncurses5-dev libusb-1.0-0-dev \
+            libssl-dev libffi-dev zlib1g-dev python3-dev
 
       - name: Install west and update PATH
         run: |
@@ -85,12 +87,8 @@ jobs:
             echo "Extracting to $SDK_DIR"
             tar -xJf "$SDK_TAR" -C "$SDK_DIR" --strip-components=1
             echo "Extract complete"
-            if [ -x "$SDK_DIR/setup.sh" ]; then
-              "$SDK_DIR/setup.sh" -t gcc-arm-none-eabi || true
-            else
-              echo "SDK setup.sh not found or not executable; extracted contents:";
-              ls -la "$SDK_DIR" || true
-            fi
+            echo "Extracted SDK contents:";
+            ls -la "$SDK_DIR" || true
           else
             echo "Minimal tarball not available; falling back to runfile installer"
             RUN_URL="https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v${SDK_VERSION}/zephyr-sdk-${SDK_VERSION}-x86_64-setup.run"
