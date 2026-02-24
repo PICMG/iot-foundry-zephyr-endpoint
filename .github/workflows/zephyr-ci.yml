@@ -158,15 +158,23 @@ jobs:
         run: |
           # ensure local pip bin is on PATH and system tools are available
           export PATH="$HOME/.local/bin:$PATH"
-          mkdir -p tests/pldm_tb/build_native
-          pushd tests/pldm_tb/build_native
-          cmake ..
-          cmake --build . -j
-          ./pldm_tb ../tests.json -v
-          # Run native FRU unit tests (no hardware I/O)
-          if [ -x ./test_fru ]; then
-            ./test_fru
+
+          # quick diagnostics to catch missing checkout/submodule problems
+          echo "PWD: $(pwd)"
+          echo "Listing tests/pldm_tb and repo roots"
+          ls -la tests/pldm_tb || true
+          ls -la pldm || true
+          ls -la pldm-cmake || true
+
+          # Configure and build explicitly using -S/-B to avoid cwd ambiguity
+          cmake -S tests/pldm_tb -B tests/pldm_tb/build_native \
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_VERBOSE_MAKEFILE=ON
+          cmake --build tests/pldm_tb/build_native -j
+
+          # Run the produced test runner and native FRU unit test
+          tests/pldm_tb/build_native/pldm_tb tests/pldm_tb/tests.json -v
+          if [ -x tests/pldm_tb/build_native/test_fru ]; then
+            tests/pldm_tb/build_native/test_fru
           else
             echo "test_fru not built or missing"; exit 1
           fi
-          popd
