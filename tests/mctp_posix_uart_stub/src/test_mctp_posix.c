@@ -30,7 +30,17 @@ int mctp_message_tx(struct mctp *mctp, uint8_t remote_eid, bool tag_owner, uint8
 static int send_and_get_completion(struct mctp *mctp_ptr, const uint8_t *reqbuf, size_t reqlen)
 {
     capture_len = 0;
+    printf("REQ: ");
+    for (size_t i = 0; i < reqlen; i++) {
+        printf("%02x ", reqbuf[i]);
+    }
+    printf("\n");
     (void)send_control_message(mctp_ptr, 0x01, true, 0x01, reqbuf, reqlen);
+    printf("RESP: ");
+    for (int i = 0; i<capture_len; i++) {
+        printf("%02x ", capture_buf[i]);
+    }
+    printf("\n");
     if (capture_len >= 4) {
         return (int)capture_buf[3];
     }
@@ -66,6 +76,9 @@ int main(void)
     test_bus.eid = 0x42;
     test_mctp_inst.n_busses = 1;
     test_mctp_inst.busses = &test_bus;
+
+	// Initialize the versions map (versions of supported MCTP and pldm message types) 
+	initialize_versions_map();
 
     /* Test 1: Get Endpoint ID (raw request bytes) */
     uint8_t get_req[] = { MCTP_CTRL_HDR_MSG_TYPE, 0x80, CONTROL_MSG_GET_ENDPOINT_ID };

@@ -62,7 +62,7 @@ After `west` is installed, you will use it to initialize the project workspace (
 ```bash
 # create workspace outside repo.  
 mkdir -p <workspace_path> && cd <workspace_path>
-west init -m <application_path>
+west init -m https://github.com/zephyrproject-rtos/zephyr
 west update
 ```
 Now that the workspace is initialized, it is important to install any further python dependencies required by `west` and optionally install the Zephyr sdk.
@@ -76,6 +76,7 @@ This applicaiton may require patches to the Zephyr source-base that are not gene
 # apply patches for this project
 cd <workspace_path>
 chmod +x <application_path>/patches/apply_patches.sh
+export ZEPHYR_BASE=/home/doug/zephyrproject/zephyr
 <application_path>/patches/apply_patches.sh
 ```
 The environment is now installed and ready to use.  Note that sourcing the virtual environment will be required with each new terminal session.
@@ -91,10 +92,10 @@ To build the project, use the following commands:
 cd <workspace_path>
 west build -p always -b arduino_nano_33_iot <application_path>
 # our use this to enable pldm:
-west build -p always -b arduino_nano_33_iot -d /home/doug/zephyrproject/build_atmega /home/doug/git/iot-foundry-zephyr-endpoint -- -DINCLUDE_PLDM=ON
+west build -p always -b arduino_nano_33_iot -d build_atmega <applcation_path> -- -DINCLUDE_PLDM=ON
 
 # or this for the nordic 54l15dk developer board
-west build -p always -b nrf54l15dk/nrf54l15/cpuapp -d /home/doug/zephyrproject/build_nordic /home/doug/git/iot-foundry-zephyr-endpoint -- -DINCLUDE_PLDM=ON
+west build -p always -b nrf54l15dk/nrf54l15/cpuapp -d build_nordic <application_path> -- -DINCLUDE_PLDM=ON
 
 ```
 The device can be programmed using:
