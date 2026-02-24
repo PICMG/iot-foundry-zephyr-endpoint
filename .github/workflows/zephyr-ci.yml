@@ -23,6 +23,27 @@ jobs:
           git -C "$GITHUB_WORKSPACE" submodule sync --recursive || true
           git -C "$GITHUB_WORKSPACE" submodule update --init --recursive || true
 
+      - name: Ensure `pldm` is available (targeted)
+        run: |
+          echo "=== Ensure pldm submodule or repo is present ==="
+          # detect configured submodule URL for pldm (if any)
+          url=$(git config --file .gitmodules --get submodule.pldm.url || echo "")
+          echo "pldm submodule url: $url"
+          if [ -n "$url" ]; then
+            # convert SSH -> HTTPS for CI if necessary
+            if echo "$url" | grep -q '^git@'; then
+              url=$(echo "$url" | sed 's#git@github.com:#https://github.com/#')
+              git config submodule.pldm.url "$url"
+            fi
+            git submodule sync pldm || true
+            git submodule update --init --recursive pldm || (
+              echo "submodule update failed; attempting to clone $url" && git clone "$url" pldm
+            )
+          else
+            echo ".gitmodules missing or no pldm entry — attempting to clone default repo"
+            git clone https://github.com/openbmc/pldm pldm || true
+          fi
+
       - name: Install system packages
         run: |
           sudo apt-get update
