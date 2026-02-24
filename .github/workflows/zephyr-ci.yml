@@ -47,8 +47,8 @@ jobs:
           cd $GITHUB_WORKSPACE
           if [ -d tools/iot_builder ]; then
             mkdir -p build-host/iot_builder
-            cmake -S tools/iot_builder -B build-host/iot_builder
-            cmake --build build-host/iot_builder -- -j$(nproc)
+            cmake -S "$GITHUB_WORKSPACE/tools/iot_builder" -B "$GITHUB_WORKSPACE/build-host/iot_builder"
+            cmake --build "$GITHUB_WORKSPACE/build-host/iot_builder" -- -j$(nproc)
             echo "iot_builder build completed"
             echo "Listing build output:"
             ls -la build-host/iot_builder || true
