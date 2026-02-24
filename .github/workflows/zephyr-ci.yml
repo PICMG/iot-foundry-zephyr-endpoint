@@ -54,6 +54,20 @@ jobs:
           echo "Re-running west -vv update to populate manifest imports"
           west -vv update || west -vv update || true
 
+      - name: Install Zephyr SDK 0.16.0
+        run: |
+          SDK_VERSION=0.16.0
+          SDK_DIR=$HOME/zephyr-sdk
+          mkdir -p "$SDK_DIR"
+          echo "Installing Zephyr SDK $SDK_VERSION to $SDK_DIR"
+          SDK_RUN=/tmp/zephyr-sdk-${SDK_VERSION}-setup.run
+          wget -qO "$SDK_RUN" https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v${SDK_VERSION}/zephyr-sdk-${SDK_VERSION}-x86_64-setup.run
+          chmod +x "$SDK_RUN"
+          # run installer non-interactively when possible; ignore errors to let CI proceed to diagnostics
+          "$SDK_RUN" -- -d "$SDK_DIR" || true
+          echo "ZEPHYR_SDK_INSTALL_DIR=$SDK_DIR" >> $GITHUB_ENV
+          echo "ZEPHYR_TOOLCHAIN_VARIANT=zephyr" >> $GITHUB_ENV
+
       - name: Install Python requirements for Zephyr
         run: |
           export ZEPHYR_BASE=$HOME/zephyrproject/zephyr
