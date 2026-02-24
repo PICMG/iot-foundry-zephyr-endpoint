@@ -14,8 +14,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          submodules: 'recursive'
+          submodules: 'false'
           fetch-depth: 0
+
+      - name: Init application submodules only
+        run: |
+          echo "=== Init/update submodules for application only ==="
+          git -C "$GITHUB_WORKSPACE" submodule sync --recursive || true
+          git -C "$GITHUB_WORKSPACE" submodule update --init --recursive || true
 
       - name: Install system packages
         run: |
@@ -65,11 +71,19 @@ jobs:
           fi
 
       - name: Build and run native_sim unit test
-        env:
-          ZEPHYR_BASE: ${{ runner.home }}/zephyrproject/zephyr
-          PATH: ${{ env.PATH }}:${{ runner.home }}/.local/bin
         run: |
-          west build -b native_sim tests/mctp_posix_uart_stub -d build_native -p auto -- -D -DINCLUDE_PLDM=ON
+          # ensure Zephyr env and west are available in this shell
+          export ZEPHYR_BASE="$HOME/zephyrproject/zephyr"
+          export PATH="$HOME/.local/bin:$PATH"
+
+          echo "=== Diagnostics ==="
+          echo "ZEPHYR_BASE=$ZEPHYR_BASE"
+          which west || true
+          west --version || true
+          west -vv status || true
+
+          # build native_sim test and run it (pass correct CMake flags after --)
+          west build -b native_sim tests/mctp_posix_uart_stub -d build_native -p auto -- -DINCLUDE_PLDM=ON
           west build -t run -d build_native
 
       - name: Build and run native pldm_tb tests
