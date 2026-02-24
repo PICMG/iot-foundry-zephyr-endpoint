@@ -13,6 +13,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+          fetch-depth: 0
 
       - name: Install system packages
         run: |
@@ -47,7 +50,7 @@ jobs:
           cd $GITHUB_WORKSPACE
           echo "$GITHUB_WORKSPACE"
           ls -la "$GITHUB_WORKSPACE"
-          ls -la "$GITHUB_WORKSPACE/tools/iot_builder"
+          ls -la "$GITHUB_WORKSPACE/tools"
           ls -la "$GITHUB_WORKSPACE/tools/iot_builder"
           test -f "$GITHUB_WORKSPACE/tools/iot_builder/CMakeLists.txt" && echo OK || echo "CMakeLists.txt missing"
           if [ -d tools/iot_builder ]; then
