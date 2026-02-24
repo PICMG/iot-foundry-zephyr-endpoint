@@ -45,9 +45,14 @@ jobs:
         run: |
           echo "=== Build iot_builder (if present) ==="
           cd $GITHUB_WORKSPACE
+          echo "$GITHUB_WORKSPACE"
+          ls -la "$GITHUB_WORKSPACE"
+          ls -la "$GITHUB_WORKSPACE/tools/iot_builder"
+          ls -la "$GITHUB_WORKSPACE/tools/iot_builder"
+          test -f "$GITHUB_WORKSPACE/tools/iot_builder/CMakeLists.txt" && echo OK || echo "CMakeLists.txt missing"
           if [ -d tools/iot_builder ]; then
             mkdir -p build-host/iot_builder
-            cmake -S "$GITHUB_WORKSPACE/tools" -B "$GITHUB_WORKSPACE/build-host/iot_builder"
+            cmake -S "$GITHUB_WORKSPACE/tools/iot_builder" -B "$GITHUB_WORKSPACE/build-host/iot_builder"
             cmake --build "$GITHUB_WORKSPACE/build-host/iot_builder" -- -j$(nproc)
             echo "iot_builder build completed"
             echo "Listing build output:"
