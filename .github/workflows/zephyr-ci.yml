@@ -75,20 +75,38 @@ jobs:
           SDK_DIR=$HOME/zephyr-sdk
           mkdir -p "$SDK_DIR"
           echo "Installing Zephyr SDK $SDK_VERSION to $SDK_DIR (minimal tarball)"
-          SDK_TAR=/tmp/zephyr-sdk-${SDK_VERSION}_linux-x86_64_minimal.tar.gz
-          SDK_URL="https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v${SDK_VERSION}/zephyr-sdk-${SDK_VERSION}_linux-x86_64_minimal.tar.gz"
-          echo "Downloading $SDK_URL"
-          wget -O "$SDK_TAR" "$SDK_URL"
-          echo "Downloaded $(stat -c%s "$SDK_TAR") bytes"
-          echo "Extracting to $SDK_DIR"
-          tar -xzf "$SDK_TAR" -C "$SDK_DIR" --strip-components=1
-          echo "Running SDK setup.sh"
-          if [ -x "$SDK_DIR/setup.sh" ]; then
-            # prefer gcc-arm-none-eabi toolchain; if unavailable, setup.sh will show options
-            "$SDK_DIR/setup.sh" -t gcc-arm-none-eabi || true
+          SDK_TAR=/tmp/zephyr-sdk-${SDK_VERSION}_linux-x86_64_minimal.tar.xz
+          SDK_URL="https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v${SDK_VERSION}/zephyr-sdk-${SDK_VERSION}_linux-x86_64_minimal.tar.xz"
+          SDK_RUN=/tmp/zephyr-sdk-${SDK_VERSION}-x86_64-setup.run
+
+          echo "Attempting to download minimal tarball: $SDK_URL"
+          if wget -qO "$SDK_TAR" "$SDK_URL"; then
+            echo "Downloaded $(stat -c%s "$SDK_TAR") bytes"
+            echo "Extracting to $SDK_DIR"
+            tar -xJf "$SDK_TAR" -C "$SDK_DIR" --strip-components=1
+            echo "Extract complete"
+            if [ -x "$SDK_DIR/setup.sh" ]; then
+              "$SDK_DIR/setup.sh" -t gcc-arm-none-eabi || true
+            else
+              echo "SDK setup.sh not found or not executable; extracted contents:";
+              ls -la "$SDK_DIR" || true
+            fi
           else
-            echo "SDK setup.sh not found or not executable; extracted contents:";
-            ls -la "$SDK_DIR" || true
+            echo "Minimal tarball not available; falling back to runfile installer"
+            RUN_URL="https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v${SDK_VERSION}/zephyr-sdk-${SDK_VERSION}-x86_64-setup.run"
+            echo "Downloading runfile: $RUN_URL"
+            if wget -O "$SDK_RUN" "$RUN_URL"; then
+              chmod +x "$SDK_RUN"
+              INSTALL_LOG=/tmp/zephyr-sdk-install.log
+              if "$SDK_RUN" -- -d "$SDK_DIR" > "$INSTALL_LOG" 2>&1; then
+                echo "Runfile installer completed"
+              else
+                echo "Runfile installer exited non-zero; dumping tail of log:" >&2
+                tail -n 200 "$INSTALL_LOG" || true
+              fi
+            else
+              echo "Failed to download runfile installer; aborting SDK install attempt" >&2
+            fi
           fi
           echo "ZEPHYR_SDK_INSTALL_DIR=$SDK_DIR" >> $GITHUB_ENV
           echo "ZEPHYR_TOOLCHAIN_VARIANT=zephyr" >> $GITHUB_ENV
