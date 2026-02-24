@@ -44,6 +44,16 @@ jobs:
           west init -m https://github.com/zephyrproject-rtos/zephyr
           west update
 
+      - name: Ensure Zephyr refs and re-run update
+        run: |
+          export ZEPHYR_BASE=$HOME/zephyrproject/zephyr
+          echo "Ensuring Zephyr tags/refs are present in $ZEPHYR_BASE"
+          git -C "$ZEPHYR_BASE" fetch --tags --prune origin || true
+          git -C "$ZEPHYR_BASE" show-ref --tags --heads || true
+          git -C "$ZEPHYR_BASE" rev-parse --verify v4.3.0 || true
+          echo "Re-running west -vv update to populate manifest imports"
+          west -vv update || west -vv update || true
+
       - name: Install Python requirements for Zephyr
         run: |
           export ZEPHYR_BASE=$HOME/zephyrproject/zephyr
