@@ -123,6 +123,8 @@ jobs:
         run: |
           # ensure Zephyr env and west are available in this shell
           export ZEPHYR_BASE="$HOME/zephyrproject/zephyr"
+          # use host toolchain for native_sim to avoid requiring Zephyr SDK
+          export ZEPHYR_TOOLCHAIN_VARIANT=host
           export PATH="$HOME/.local/bin:$PATH"
 
           echo "=== Diagnostics ==="
