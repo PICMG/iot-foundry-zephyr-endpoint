@@ -31,7 +31,8 @@ jobs:
             python3-pip python3-setuptools python3-venv build-essential \
             gcc-arm-none-eabi binutils-arm-none-eabi libc6-dev \
             xz-utils unzip pkg-config libncurses5-dev libusb-1.0-0-dev \
-            libssl-dev libffi-dev zlib1g-dev python3-dev
+            libssl-dev libffi-dev zlib1g-dev python3-dev \
+            gcc-multilib g++-multilib libc6-dev-i386
 
       - name: Install west and update PATH
         run: |
