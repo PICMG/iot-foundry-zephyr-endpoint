@@ -157,6 +157,18 @@ jobs:
             echo "tools/iot_builder not found in repository; skipping"
           fi
 
+      - name: Generate PDRs with iot_builder
+        run: |
+          echo "=== Generate PDRs using built iot_builder ==="
+          if [ -x build-host/iot_builder/iot_builder ]; then
+            mkdir -p build-host/iot_builder/generated
+            build-host/iot_builder/iot_builder tools/iot_builder/src/builder/sample_config.json build-host/iot_builder/generated/
+            ls -la build-host/iot_builder/generated || true
+            test -f build-host/iot_builder/generated/config.h || (echo "iot_builder did not produce config.h" && exit 1)
+          else
+            echo "iot_builder binary missing; cannot generate PDRs" && exit 1
+          fi
+
       - name: Build and run native_sim unit test
         run: |
           # ensure Zephyr env and west are available in this shell
