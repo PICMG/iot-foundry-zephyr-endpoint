@@ -165,6 +165,17 @@ jobs:
             build-host/iot_builder/iot_builder tools/iot_builder/src/builder/sample_config.json build-host/iot_builder/generated/
             ls -la build-host/iot_builder/generated || true
             test -f build-host/iot_builder/generated/config.h || (echo "iot_builder did not produce config.h" && exit 1)
+            echo "Copying generated config.h into repository paths used by tests"
+            mkdir -p src/pdrs
+            cp build-host/iot_builder/generated/config.h src/pdrs/config.h
+            cp build-host/iot_builder/generated/config.c src/pdrs/config.c
+            # also copy into pldm tree if it exists (some builds expect it there)
+            if [ -d pldm/src/pdrs ]; then
+              mkdir -p pldm/src/pdrs
+              cp build-host/iot_builder/generated/config.h pldm/src/pdrs/config.h || true
+              cp build-host/iot_builder/generated/config.c pldm/src/pdrs/config.c || true
+            fi
+            ls -la src/pdrs || true
           else
             echo "iot_builder binary missing; cannot generate PDRs" && exit 1
           fi
